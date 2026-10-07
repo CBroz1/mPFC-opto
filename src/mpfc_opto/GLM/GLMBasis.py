@@ -33,7 +33,7 @@ from scipy.stats import zscore
 from pynwb.core import ScratchData
 from spyglass.common.custom_nwbfile import AnalysisNwbfile
 from spyglass.utils import SpyglassMixin, SpyglassMixinPart, logger
-from GLM.glm_tables_dmr import GLMStorage
+from mpfc_opto.GLM.glm_tables_dmr import GLMStorage
 
 schema = dj.schema("denissemorales_glmbasis")
 

@@ -20,7 +20,7 @@ from spyglass.lfp.analysis.v1 import lfp_band
 from spyglass.spikesorting.analysis.v1.group import SortedSpikesGroup
 from spyglass.utils import SpyglassMixin
 
-from sleep.sleep_table_dmr import SleepScoring
+from mpfc_opto.sleep.sleep_table_dmr import SleepScoring
 
 schema = dj.schema("denissemorales_updownstates")
 
