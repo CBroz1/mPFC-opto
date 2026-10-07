@@ -243,8 +243,12 @@ class ForkTrackEvents(SpyglassMixin, dj.Computed):
         # ----------------------------
         # 2. Separate pokes and pumps
         # ----------------------------
-        poke_df = forktrack_df[forktrack_df.forktrack_name.str.contains("poke")].copy()
-        pump_df = forktrack_df[forktrack_df.forktrack_name.str.contains("pump")].copy()
+        poke_df = forktrack_df[
+            forktrack_df.forktrack_name.str.contains("poke")
+        ].copy()
+        pump_df = forktrack_df[
+            forktrack_df.forktrack_name.str.contains("pump")
+        ].copy()
 
         # Save RAW pokes for alignment
         raw_poke_df = poke_df.copy()
@@ -269,7 +273,11 @@ class ForkTrackEvents(SpyglassMixin, dj.Computed):
             t = r.time
             well = r.well_name
             prev_well = r.prev_well
-            trial_type = "Inbound" if "Center" in well or "Handle" in well else "Outbound"
+            trial_type = (
+                "Inbound"
+                if "Center" in well or "Handle" in well
+                else "Outbound"
+            )
             transition = "" if prev_well is None else f"{prev_well}→{well}"
 
             pump_triggered = False
@@ -355,7 +363,8 @@ class ForkTrackEvents(SpyglassMixin, dj.Computed):
                     }
                 else:
                     offset = np.median(
-                        raw_poke_df.time.to_numpy()[:N] - log_df.time.to_numpy()[:N]
+                        raw_poke_df.time.to_numpy()[:N]
+                        - log_df.time.to_numpy()[:N]
                     )
                     log_df["time"] += offset
 
@@ -397,7 +406,10 @@ class ForkTrackEvents(SpyglassMixin, dj.Computed):
         if "position" in validation_report:
             pos_valid = validation_report["position"]["invalid_pokes"] == 0
 
-        if "log" in validation_report and "warning" not in validation_report["log"]:
+        if (
+            "log" in validation_report
+            and "warning" not in validation_report["log"]
+        ):
             log_valid = all(
                 r["match_rate"] == 1.0
                 for r in validation_report["log"].values()
@@ -407,7 +419,9 @@ class ForkTrackEvents(SpyglassMixin, dj.Computed):
 
         return [nwb_file_name, final_df, validation_report, epoch, is_valid]
 
-    def make_insert(self, key, nwb_file_name, final_df, validation_report, epoch, is_valid):
+    def make_insert(
+        self, key, nwb_file_name, final_df, validation_report, epoch, is_valid
+    ):
         """Write results to NWB and insert into ForkTrackEvents.
 
         Parameters
@@ -450,6 +464,7 @@ class ForkTrackEvents(SpyglassMixin, dj.Computed):
 # =====================================================
 # HELPER FUNCTIONS
 # =====================================================
+
 
 def get_first_pokes_after_well_change(poke_df):
     """
@@ -644,8 +659,12 @@ def validate_poke_events(
 
     if plot:
         _plot_position_validation(
-            valid_pokes, invalid_pokes, position_x, position_y,
-            well_positions, distance_threshold,
+            valid_pokes,
+            invalid_pokes,
+            position_x,
+            position_y,
+            well_positions,
+            distance_threshold,
         )
 
     return {
@@ -656,8 +675,12 @@ def validate_poke_events(
 
 
 def _plot_position_validation(
-    valid_pokes, invalid_pokes, position_x, position_y,
-    well_positions, distance_threshold,
+    valid_pokes,
+    invalid_pokes,
+    position_x,
+    position_y,
+    well_positions,
+    distance_threshold,
 ):
     """Create visualization of position-based poke validation."""
     fig, ax = plt.subplots(figsize=(10, 8))
@@ -783,9 +806,7 @@ def compare_forktrack_events(extracted_df, forktrack_dict, tolerance=0.001):
             "matched": int(matched),
             "missing_in_processed": missing,
             "extra_in_processed": extra,
-            "match_rate": (
-                matched / len(gt_times) if len(gt_times) > 0 else 0
-            ),
+            "match_rate": (matched / len(gt_times) if len(gt_times) > 0 else 0),
         }
 
     return results
@@ -993,6 +1014,7 @@ def interpolate_position(position_times, position_x, position_y, query_times):
 
     return np.column_stack((interp_x, interp_y))
 
+
 def compute_performance(final_df, window=10, trial_types=None):
     """
     Compute trial-by-trial correctness and smoothed probability correct
@@ -1045,18 +1067,14 @@ def compute_performance(final_df, window=10, trial_types=None):
 
     # Global rolling probability correct (min_periods=1 to avoid NaNs at start)
     df["p_correct_smooth"] = (
-        df["correct"]
-        .astype(float)
-        .rolling(window=window, min_periods=1)
-        .mean()
+        df["correct"].astype(float).rolling(window=window, min_periods=1).mean()
     )
 
     # Per-trial-type rolling probability correct
-    df["p_correct_smooth_per_type"] = (
-        df.groupby("trial_type")["correct"]
-        .transform(
-            lambda x: x.astype(float).rolling(window=window, min_periods=1).mean()
-        )
+    df["p_correct_smooth_per_type"] = df.groupby("trial_type")[
+        "correct"
+    ].transform(
+        lambda x: x.astype(float).rolling(window=window, min_periods=1).mean()
     )
 
     return df.reset_index(drop=True)

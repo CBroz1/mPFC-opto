@@ -32,6 +32,7 @@ schema = dj.schema("denissemorales_pss")
 # Helper functions
 # -----------------------------------------------------------------------------
 
+
 def fit_pss_from_psd(
     freqs: np.ndarray,
     psd: np.ndarray,
@@ -74,7 +75,9 @@ def compute_pss_windows(
     window_s: float = 2.0,
     step_s: float = 1.0,
     f_range: Tuple[float, float] = (4.0, 90.0),
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[
+    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
+]:
     """Compute sliding-window PSS from a wideband LFP trace.
 
     Returns relative window centers in seconds from the start of x.
@@ -135,7 +138,9 @@ def compute_pss_windows_with_timestamps(
     window_s: float = 2.0,
     step_s: float = 1.0,
     f_range: Tuple[float, float] = (4.0, 90.0),
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[
+    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
+]:
     """Compute sliding-window PSS and return absolute window-center timestamps.
 
     This is the preferred helper when the LFP dataframe index is already in
@@ -198,6 +203,7 @@ def compute_pss_windows_with_timestamps(
 # -----------------------------------------------------------------------------
 # Tables
 # -----------------------------------------------------------------------------
+
 
 @schema
 class PSSParams(SpyglassMixin, dj.Lookup):
@@ -324,6 +330,7 @@ class SleepPSS(SpyglassMixin, dj.Computed):
 # -----------------------------------------------------------------------------
 # Convenience helper for SleepScoring
 # -----------------------------------------------------------------------------
+
 
 def fetch_pss_series(
     pss_key: dict,

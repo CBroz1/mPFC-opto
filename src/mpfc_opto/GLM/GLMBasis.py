@@ -136,9 +136,15 @@ def _split_basis_by_category(eval_basis, cat_values, n_basis, name_prefix):
         piece = eval_basis.at[~mask2d].set(0.0)
         pieces.append(piece)
         cat_idx += [label] * n_basis
-        names.extend([f"{name_prefix}_{label}_bump_{i}" for i in range(n_basis)])
+        names.extend(
+            [f"{name_prefix}_{label}_bump_{i}" for i in range(n_basis)]
+        )
 
-    combined = jnp.concatenate(pieces, axis=-1) if pieces else jnp.zeros((eval_basis.shape[0], 0))
+    combined = (
+        jnp.concatenate(pieces, axis=-1)
+        if pieces
+        else jnp.zeros((eval_basis.shape[0], 0))
+    )
     return combined, np.array(cat_idx), names, labels
 
 
@@ -177,48 +183,99 @@ def build_bases(
     # progression through the track / trial)
     # ---------------------------------------------------------------
     linpos = df["linear_position"].values.astype(float)
-    lp_min = linear_position_min if linear_position_min is not None else np.nanmin(linpos)
-    lp_max = linear_position_max if linear_position_max is not None else np.nanmax(linpos)
+    lp_min = (
+        linear_position_min
+        if linear_position_min is not None
+        else np.nanmin(linpos)
+    )
+    lp_max = (
+        linear_position_max
+        if linear_position_max is not None
+        else np.nanmax(linpos)
+    )
 
     cos_bases_linpos = nmo.basis.RaisedCosineLinearEval(
-        n_basis_funcs=n_basis_funcs_linear_position, width=2, bounds=[lp_min, lp_max]
+        n_basis_funcs=n_basis_funcs_linear_position,
+        width=2,
+        bounds=[lp_min, lp_max],
     )
     eval_linpos = _nan_to_zero(cos_bases_linpos.compute_features(linpos))
-    linpos_basis_names = [f"linear_position_bump_{i}" for i in range(n_basis_funcs_linear_position)]
+    linpos_basis_names = [
+        f"linear_position_bump_{i}"
+        for i in range(n_basis_funcs_linear_position)
+    ]
     linpos_grid = np.linspace(lp_min, lp_max, n_linpos_grid)
     kernel_linpos = cos_bases_linpos.compute_features(linpos_grid)
 
     # interaction: linear_position x current/previous reward (+/-0.5 coded, as in original ppt_reward)
     current_reward = df["current_reward"].values.astype(float) - 0.5
     linpos_reward = eval_linpos * current_reward[:, None]
-    linpos_reward_names = [f"linpos_reward_bump_{i}" for i in range(n_basis_funcs_linear_position)]
+    linpos_reward_names = [
+        f"linpos_reward_bump_{i}" for i in range(n_basis_funcs_linear_position)
+    ]
 
     previous_reward = df["previous_reward"].values.astype(float) - 0.5
     linpos_prev_reward = eval_linpos * previous_reward[:, None]
-    linpos_prev_reward_names = [f"linpos_prev_reward_bump_{i}" for i in range(n_basis_funcs_linear_position)]
+    linpos_prev_reward_names = [
+        f"linpos_prev_reward_bump_{i}"
+        for i in range(n_basis_funcs_linear_position)
+    ]
 
     # interaction: linear_position split by turn / previous_turn / upcoming_turn identity
-    linpos_turn, linpos_turn_idx, linpos_turn_names, _ = _split_basis_by_category(
-        eval_linpos, df["turn"].values, n_basis_funcs_linear_position, "linpos_turn"
+    linpos_turn, linpos_turn_idx, linpos_turn_names, _ = (
+        _split_basis_by_category(
+            eval_linpos,
+            df["turn"].values,
+            n_basis_funcs_linear_position,
+            "linpos_turn",
+        )
     )
-    linpos_prev_turn, linpos_prev_turn_idx, linpos_prev_turn_names, _ = _split_basis_by_category(
-        eval_linpos, df["previous_turn"].values, n_basis_funcs_linear_position, "linpos_prev_turn"
+    linpos_prev_turn, linpos_prev_turn_idx, linpos_prev_turn_names, _ = (
+        _split_basis_by_category(
+            eval_linpos,
+            df["previous_turn"].values,
+            n_basis_funcs_linear_position,
+            "linpos_prev_turn",
+        )
     )
-    linpos_upcoming_turn, linpos_upcoming_turn_idx, linpos_upcoming_turn_names, _ = _split_basis_by_category(
-        eval_linpos, df["upcoming_turn"].values, n_basis_funcs_linear_position, "linpos_upcoming_turn"
+    (
+        linpos_upcoming_turn,
+        linpos_upcoming_turn_idx,
+        linpos_upcoming_turn_names,
+        _,
+    ) = _split_basis_by_category(
+        eval_linpos,
+        df["upcoming_turn"].values,
+        n_basis_funcs_linear_position,
+        "linpos_upcoming_turn",
     )
 
     # interaction: linear_position split by previous arm / home arm identity
-    linpos_prev_arm, linpos_prev_arm_idx, linpos_prev_arm_names, _ = _split_basis_by_category(
-        eval_linpos, df["previous_arm"].values, n_basis_funcs_linear_position, "linpos_prev_arm"
+    linpos_prev_arm, linpos_prev_arm_idx, linpos_prev_arm_names, _ = (
+        _split_basis_by_category(
+            eval_linpos,
+            df["previous_arm"].values,
+            n_basis_funcs_linear_position,
+            "linpos_prev_arm",
+        )
     )
-    linpos_home_arm, linpos_home_arm_idx, linpos_home_arm_names, _ = _split_basis_by_category(
-        eval_linpos, df["home_arm"].values, n_basis_funcs_linear_position, "linpos_home_arm"
+    linpos_home_arm, linpos_home_arm_idx, linpos_home_arm_names, _ = (
+        _split_basis_by_category(
+            eval_linpos,
+            df["home_arm"].values,
+            n_basis_funcs_linear_position,
+            "linpos_home_arm",
+        )
     )
 
     # interaction: linear_position split by track segment (analogous to "ppt_maze" in original)
-    linpos_segment, linpos_segment_idx, linpos_segment_names, _ = _split_basis_by_category(
-        eval_linpos, df["track_segment_id"].values, n_basis_funcs_linear_position, "linpos_segment"
+    linpos_segment, linpos_segment_idx, linpos_segment_names, _ = (
+        _split_basis_by_category(
+            eval_linpos,
+            df["track_segment_id"].values,
+            n_basis_funcs_linear_position,
+            "linpos_segment",
+        )
     )
 
     # interaction: linear_position split by path type -- path type is already one-hot in the
@@ -230,7 +287,12 @@ def build_bases(
         path_pieces.append(eval_linpos.at[~mask2d].set(0.0))
         path_idx += [i_path] * n_basis_funcs_linear_position
         short_name = col.replace("path_type_", "")
-        path_names.extend([f"linpos_path_{short_name}_bump_{i}" for i in range(n_basis_funcs_linear_position)])
+        path_names.extend(
+            [
+                f"linpos_path_{short_name}_bump_{i}"
+                for i in range(n_basis_funcs_linear_position)
+            ]
+        )
     linpos_path_type = jnp.concatenate(path_pieces, axis=-1)
     linpos_path_type_idx = np.array(path_idx)
 
@@ -246,21 +308,42 @@ def build_bases(
     pos_x_c = np.clip(pos_x, *pos_x_range)
     pos_y_c = np.clip(pos_y, *pos_y_range)
 
-    cos_bases_pos_x = nmo.basis.RaisedCosineLinearEval(n_basis_funcs=n_basis_funcs_x, width=2, bounds=pos_x_range)
-    cos_bases_pos_y = nmo.basis.RaisedCosineLinearEval(n_basis_funcs=n_basis_funcs_y, width=2, bounds=pos_y_range)
-    cos_bases_pos_2d = cos_bases_pos_x * cos_bases_pos_y  # nemos MultiplicativeBasis, like original
-    eval_pos_2d = _nan_to_zero(cos_bases_pos_2d.compute_features(pos_x_c, pos_y_c))
-    pos_2d_basis_names = [f"pos_2d_bump_{i}" for i in range(n_basis_funcs_x * n_basis_funcs_y)]
+    cos_bases_pos_x = nmo.basis.RaisedCosineLinearEval(
+        n_basis_funcs=n_basis_funcs_x, width=2, bounds=pos_x_range
+    )
+    cos_bases_pos_y = nmo.basis.RaisedCosineLinearEval(
+        n_basis_funcs=n_basis_funcs_y, width=2, bounds=pos_y_range
+    )
+    cos_bases_pos_2d = (
+        cos_bases_pos_x * cos_bases_pos_y
+    )  # nemos MultiplicativeBasis, like original
+    eval_pos_2d = _nan_to_zero(
+        cos_bases_pos_2d.compute_features(pos_x_c, pos_y_c)
+    )
+    pos_2d_basis_names = [
+        f"pos_2d_bump_{i}" for i in range(n_basis_funcs_x * n_basis_funcs_y)
+    ]
 
     # kernel for visualization, built unbounded (same workaround noted in the original code
     # for a bounds-related bug in evaluate_on_grid)
-    cos_bases_pos_x_vis = nmo.basis.RaisedCosineLinearEval(n_basis_funcs=n_basis_funcs_x, width=2)
-    cos_bases_pos_y_vis = nmo.basis.RaisedCosineLinearEval(n_basis_funcs=n_basis_funcs_y, width=2)
-    _, _, kernel_pos = (cos_bases_pos_x_vis * cos_bases_pos_y_vis).evaluate_on_grid(n_pos_x_grid, n_pos_y_grid)
+    cos_bases_pos_x_vis = nmo.basis.RaisedCosineLinearEval(
+        n_basis_funcs=n_basis_funcs_x, width=2
+    )
+    cos_bases_pos_y_vis = nmo.basis.RaisedCosineLinearEval(
+        n_basis_funcs=n_basis_funcs_y, width=2
+    )
+    _, _, kernel_pos = (
+        cos_bases_pos_x_vis * cos_bases_pos_y_vis
+    ).evaluate_on_grid(n_pos_x_grid, n_pos_y_grid)
 
     # interaction: 2D position split by track segment (analogous to "pos_2d_maze" in original)
-    pos_2d_segment, pos_2d_segment_idx, pos_2d_segment_names, _ = _split_basis_by_category(
-        eval_pos_2d, df["track_segment_id"].values, n_basis_funcs_x * n_basis_funcs_y, "pos_2d_segment"
+    pos_2d_segment, pos_2d_segment_idx, pos_2d_segment_names, _ = (
+        _split_basis_by_category(
+            eval_pos_2d,
+            df["track_segment_id"].values,
+            n_basis_funcs_x * n_basis_funcs_y,
+            "pos_2d_segment",
+        )
     )
 
     # ---------------------------------------------------------------
@@ -270,7 +353,9 @@ def build_bases(
     speed_min = 0.0
     speed_max = float(np.nanpercentile(speed, 99.0))
     speed_c = np.clip(speed, speed_min, speed_max)
-    bspline_basis_speed = nmo.basis.BSplineEval(n_basis_funcs_speed, order=4, bounds=[speed_min, speed_max])
+    bspline_basis_speed = nmo.basis.BSplineEval(
+        n_basis_funcs_speed, order=4, bounds=[speed_min, speed_max]
+    )
     eval_speed = _nan_to_zero(bspline_basis_speed.compute_features(speed_c))
     speed_basis_names = [f"speed_bump_{i}" for i in range(n_basis_funcs_speed)]
     speed_grid = np.linspace(speed_min, speed_max, n_speed_grid)
@@ -280,11 +365,21 @@ def build_bases(
     # orientation -- circular variable, use nemos's cyclic basis
     # ---------------------------------------------------------------
     orientation = _wrap_to_2pi(df["orientation"].values.astype(float))
-    cyclic_bases_orientation = nmo.basis.CyclicBSplineEval(n_basis_funcs_orientation, order=4, bounds=[0, 2 * np.pi])
-    eval_orientation = _nan_to_zero(cyclic_bases_orientation.compute_features(orientation))
-    orientation_basis_names = [f"orientation_bump_{i}" for i in range(n_basis_funcs_orientation)]
-    orientation_grid = np.linspace(0, 2 * np.pi, n_orientation_grid, endpoint=False)
-    kernel_orientation = cyclic_bases_orientation.compute_features(orientation_grid)
+    cyclic_bases_orientation = nmo.basis.CyclicBSplineEval(
+        n_basis_funcs_orientation, order=4, bounds=[0, 2 * np.pi]
+    )
+    eval_orientation = _nan_to_zero(
+        cyclic_bases_orientation.compute_features(orientation)
+    )
+    orientation_basis_names = [
+        f"orientation_bump_{i}" for i in range(n_basis_funcs_orientation)
+    ]
+    orientation_grid = np.linspace(
+        0, 2 * np.pi, n_orientation_grid, endpoint=False
+    )
+    kernel_orientation = cyclic_bases_orientation.compute_features(
+        orientation_grid
+    )
 
     # ---------------------------------------------------------------
     # per-epoch nuisance regressors (analogous to "time_in_epoch" / "epoch_offset")
@@ -300,8 +395,12 @@ def build_bases(
         epoch_offset_cols.append(this_mask.astype(float))
     time_in_epoch = jnp.array(np.stack(time_in_epoch_cols, axis=1))
     epoch_offset = jnp.array(np.stack(epoch_offset_cols, axis=1))
-    time_in_epoch_names = [f"time_in_epoch_bump_{i}" for i in range(len(unique_epoch))]
-    epoch_offset_names = [f"epoch_offset_bump_{i}" for i in range(len(unique_epoch))]
+    time_in_epoch_names = [
+        f"time_in_epoch_bump_{i}" for i in range(len(unique_epoch))
+    ]
+    epoch_offset_names = [
+        f"epoch_offset_bump_{i}" for i in range(len(unique_epoch))
+    ]
 
     feature_dict = {
         "linear_position": eval_linpos,
@@ -361,10 +460,19 @@ def build_bases(
 
 # variables that get a single occupancy threshold applied to the whole basis block
 _OCCUPANCY_THRESHOLD_VARS = {
-    "linear_position", "linpos_reward", "linpos_prev_reward",
-    "linpos_turn", "linpos_prev_turn", "linpos_upcoming_turn",
-    "linpos_prev_arm", "linpos_home_arm", "linpos_segment", "linpos_path_type",
-    "pos_2d", "pos_2d_segment", "orientation",
+    "linear_position",
+    "linpos_reward",
+    "linpos_prev_reward",
+    "linpos_turn",
+    "linpos_prev_turn",
+    "linpos_upcoming_turn",
+    "linpos_prev_arm",
+    "linpos_home_arm",
+    "linpos_segment",
+    "linpos_path_type",
+    "pos_2d",
+    "pos_2d_segment",
+    "orientation",
 }
 # variables that get z-scored instead (unbounded / already-continuous nuisance regressors)
 _ZSCORE_VARS = {"speed", "time_in_epoch"}
@@ -395,7 +503,9 @@ def process_design_matrix(
                           prediction/ablation time
     kernel_dict        : passed through from build_bases, for tuning-curve plotting
     """
-    feature_dict, feature_name_dict, kernel_dict = build_bases(df, **basis_kwargs)
+    feature_dict, feature_name_dict, kernel_dict = build_bases(
+        df, **basis_kwargs
+    )
 
     var_val, all_feature_names = [], []
     selected_bases_idx = {}
@@ -409,10 +519,14 @@ def process_design_matrix(
             )
 
         if var in _OCCUPANCY_THRESHOLD_VARS:
-            selected = np.array(feature_dict[var].std(axis=0)) > occupancy_sd_thresh
+            selected = (
+                np.array(feature_dict[var].std(axis=0)) > occupancy_sd_thresh
+            )
             var_val.append(np.array(feature_dict[var])[:, selected])
             selected_bases_idx[var] = selected
-            all_feature_names.extend(list(np.array(feature_name_dict[var])[selected]))
+            all_feature_names.extend(
+                list(np.array(feature_name_dict[var])[selected])
+            )
             n_sel = int(np.sum(selected))
 
         elif var in _ZSCORE_VARS:
@@ -428,7 +542,9 @@ def process_design_matrix(
             n_sel = vals.shape[-1]
 
         else:
-            raise ValueError(f"No handling rule registered for variable '{var}'")
+            raise ValueError(
+                f"No handling rule registered for variable '{var}'"
+            )
 
         group_size.append(n_sel)
         group_name.append(var)
@@ -445,7 +561,15 @@ def process_design_matrix(
         feature_group_mask[i, start : start + sz] = 1
         start += sz
 
-    return X, all_feature_names, group_ind, group_name, feature_group_mask, selected_bases_idx, kernel_dict
+    return (
+        X,
+        all_feature_names,
+        group_ind,
+        group_name,
+        feature_group_mask,
+        selected_bases_idx,
+        kernel_dict,
+    )
 
 
 # =============================================================================
@@ -590,7 +714,9 @@ class GLMBasis(SpyglassMixin, dj.Computed):
 
         return [var_names, basis_params, occupancy_sd_thresh, combined_df]
 
-    def make_compute(self, key, var_names, basis_params, occupancy_sd_thresh, combined_df):
+    def make_compute(
+        self, key, var_names, basis_params, occupancy_sd_thresh, combined_df
+    ):
         """Run the computation and write the (potentially large, slow-to-write)
         analysis NWB files. No DataJoint/DB access here -- `AnalysisNwbfile().create()`
         and `.add_nwb_object()` only write to the NWB file on disk; the DB write that
@@ -734,7 +860,9 @@ class GLMBasis(SpyglassMixin, dj.Computed):
             ),
         }
 
-        logger.info(f"Finished building GLM basis set for {key}; ready to insert.")
+        logger.info(
+            f"Finished building GLM basis set for {key}; ready to insert."
+        )
 
         return [master_key, group_rows, kernel_key]
 
@@ -743,12 +871,16 @@ class GLMBasis(SpyglassMixin, dj.Computed):
         a transaction, so keep this fast -- just registering already-written NWB
         files and inserting rows.
         """
-        AnalysisNwbfile().add(key["nwb_file_name"], master_key["analysis_file_name"])
+        AnalysisNwbfile().add(
+            key["nwb_file_name"], master_key["analysis_file_name"]
+        )
         self.insert1(master_key)
 
         self.GroupInfo.insert(group_rows)
 
-        AnalysisNwbfile().add(key["nwb_file_name"], kernel_key["analysis_file_name"])
+        AnalysisNwbfile().add(
+            key["nwb_file_name"], kernel_key["analysis_file_name"]
+        )
         self.Kernel.insert1(kernel_key)
 
     def _fetch_combined_dataframe(self, key):

@@ -28,6 +28,7 @@ from mpfc_opto.sleep.pss_dmr import PSSParams, PSSSelection, SleepPSS
 schema = dj.schema("denissemorales_sleepscoring")
 VALID_METHODS = {"gmm", "kmeans", "hierarchical"}
 
+
 @schema
 class SleepScoringParams(SpyglassMixin, dj.Lookup):
     definition = """
@@ -236,7 +237,9 @@ class SleepScoring(SpyglassMixin, dj.Computed):
         # Head speed
         head_speed = None
         if sel.get("pos_merge_id") is not None:
-            pos_df = (PositionOutput & {"merge_id": sel["pos_merge_id"]}).fetch1_dataframe()
+            pos_df = (
+                PositionOutput & {"merge_id": sel["pos_merge_id"]}
+            ).fetch1_dataframe()
             head_speed = np.interp(
                 theta_timestamps, pos_df.index.values, pos_df["speed"].values
             )
@@ -245,11 +248,12 @@ class SleepScoring(SpyglassMixin, dj.Computed):
         emg_power = None
         if sel.get("emg_merge_id") is not None and sel.get("emg_filter_name"):
             emg_df = (
-                lfp.LFPOutput
-                & {"merge_id": sel["emg_merge_id"]}
+                lfp.LFPOutput & {"merge_id": sel["emg_merge_id"]}
             ).fetch1_dataframe()
             print(f"Fetched EMG dataframe with shape {emg_df.shape}")
-            emg_timestamps, emg_corr = self.emg_from_lfp_corr(emg_df, output_fs=2.0)
+            emg_timestamps, emg_corr = self.emg_from_lfp_corr(
+                emg_df, output_fs=2.0
+            )
             emg_power = np.interp(theta_timestamps, emg_timestamps, emg_corr)
 
         # PSS (optional)
@@ -269,7 +273,9 @@ class SleepScoring(SpyglassMixin, dj.Computed):
                     "lfp_merge_id": sel["lfp_merge_id"],
                 }
             ).fetch("pss_values")[0]
-            print(pss_timestamps.shape, pss_values.shape, theta_timestamps.shape)
+            print(
+                pss_timestamps.shape, pss_values.shape, theta_timestamps.shape
+            )
             pss_data = np.interp(theta_timestamps, pss_timestamps, pss_values)
 
         return {
@@ -316,10 +322,9 @@ class SleepScoring(SpyglassMixin, dj.Computed):
             delta = features["delta_power"]
 
             # Score each sleep epoch by how "REM-like" it is (high theta, low delta)
-            rem_score = (
-                theta / (np.percentile(theta[sleep_mask], 1) + 1e-10)
-                - delta / (np.percentile(delta[sleep_mask], 99) + 1e-10)
-            )
+            rem_score = theta / (
+                np.percentile(theta[sleep_mask], 1) + 1e-10
+            ) - delta / (np.percentile(delta[sleep_mask], 99) + 1e-10)
 
             # Only consider sleep epochs
             candidate_scores = np.where(sleep_mask, rem_score, -np.inf)
@@ -348,12 +353,20 @@ class SleepScoring(SpyglassMixin, dj.Computed):
                     f"({100 * np.sum(rem_mask) / n_sleep:.1f}% of sleep)"
                 )
             else:
-                print("REM fallback: no qualifying epochs found, leaving NREM intact")
+                print(
+                    "REM fallback: no qualifying epochs found, leaving NREM intact"
+                )
 
         # Derive intervals & durations
-        nrem_intervals = self._states_to_intervals(states, theta_timestamps, state=0)
-        rem_intervals = self._states_to_intervals(states, theta_timestamps, state=1)
-        wake_intervals = self._states_to_intervals(states, theta_timestamps, state=2)
+        nrem_intervals = self._states_to_intervals(
+            states, theta_timestamps, state=0
+        )
+        rem_intervals = self._states_to_intervals(
+            states, theta_timestamps, state=1
+        )
+        wake_intervals = self._states_to_intervals(
+            states, theta_timestamps, state=2
+        )
 
         total_time = theta_timestamps[-1] - theta_timestamps[0]
         nrem_duration = float(np.sum([e - s for s, e in nrem_intervals]))
@@ -363,7 +376,11 @@ class SleepScoring(SpyglassMixin, dj.Computed):
         return {
             "states": states,
             "timestamps": theta_timestamps,
-            "intervals": {"nrem": nrem_intervals, "rem": rem_intervals, "wake": wake_intervals},
+            "intervals": {
+                "nrem": nrem_intervals,
+                "rem": rem_intervals,
+                "wake": wake_intervals,
+            },
             "nrem_duration": nrem_duration,
             "rem_duration": rem_duration,
             "wake_duration": wake_duration,
@@ -384,7 +401,9 @@ class SleepScoring(SpyglassMixin, dj.Computed):
             obj_id = builder.add_nwb_object(
                 result["states"].astype(np.int32), table_name="state_labels"
             )
-            builder.add_nwb_object(result["timestamps"], table_name="timestamps")
+            builder.add_nwb_object(
+                result["timestamps"], table_name="timestamps"
+            )
             analysis_file_name = builder.analysis_file_name
 
         self.insert1(
@@ -439,7 +458,9 @@ class SleepScoring(SpyglassMixin, dj.Computed):
         if n_samples < 2:
             raise ValueError("Need at least 2 samples.")
         if n_channels < 2:
-            raise ValueError("Need at least 2 channels to compute pairwise EMG.")
+            raise ValueError(
+                "Need at least 2 channels to compute pairwise EMG."
+            )
 
         fs = 1.0 / float(np.median(np.diff(timestamps)))
 
@@ -459,7 +480,9 @@ class SleepScoring(SpyglassMixin, dj.Computed):
         win_offsets = np.arange(-half_win, half_win + 1)  # (2*half_win+1,)
 
         # All pairs — channel selection already done upstream
-        pairs = [(j, k) for j in range(n_channels) for k in range(j + 1, n_channels)]
+        pairs = [
+            (j, k) for j in range(n_channels) for k in range(j + 1, n_channels)
+        ]
 
         # Summed zero-lag Pearson correlation across all pairs
         emg_corr = np.zeros(len(center_inds), dtype=float)
@@ -545,7 +568,9 @@ class SleepScoring(SpyglassMixin, dj.Computed):
         feature_matrix_scaled = StandardScaler().fit_transform(feature_matrix)
 
         if params["method"] == "gmm":
-            model = GaussianMixture(n_components=3, random_state=42, covariance_type="full")
+            model = GaussianMixture(
+                n_components=3, random_state=42, covariance_type="full"
+            )
         else:
             model = KMeans(n_clusters=3, random_state=42, n_init=10)
 
@@ -564,10 +589,9 @@ class SleepScoring(SpyglassMixin, dj.Computed):
 
         use_speed = params.get("use_speed_for_wake", True)
 
-        emg_available = (
-            features.get("emg_power") is not None
-            and not np.allclose(features["emg_power"], 0)
-        )
+        emg_available = features.get(
+            "emg_power"
+        ) is not None and not np.allclose(features["emg_power"], 0)
 
         if emg_available:
             emg = np.asarray(features["emg_power"], dtype=float)
@@ -597,7 +621,9 @@ class SleepScoring(SpyglassMixin, dj.Computed):
 
         elif use_speed and features.get("speed_wake") is not None:
             wake_mask = features["speed_wake"].astype(bool)
-            print(f"Wake detection using head speed: {np.sum(wake_mask)} epochs WAKE")
+            print(
+                f"Wake detection using head speed: {np.sum(wake_mask)} epochs WAKE"
+            )
 
         else:
             wake_mask = np.zeros(n, dtype=bool)
@@ -617,9 +643,16 @@ class SleepScoring(SpyglassMixin, dj.Computed):
             dt_valid = dt_ratio[valid]
 
             if len(dt_valid) >= min_sleep_epochs:
-                if params.get("sleep_classification_method", "kmeans") == "kmeans":
-                    x_scaled = StandardScaler().fit_transform(dt_valid.reshape(-1, 1))
-                    labels = KMeans(n_clusters=2, random_state=42, n_init=10).fit_predict(x_scaled)
+                if (
+                    params.get("sleep_classification_method", "kmeans")
+                    == "kmeans"
+                ):
+                    x_scaled = StandardScaler().fit_transform(
+                        dt_valid.reshape(-1, 1)
+                    )
+                    labels = KMeans(
+                        n_clusters=2, random_state=42, n_init=10
+                    ).fit_predict(x_scaled)
                     dt_means = [np.mean(dt_valid[labels == i]) for i in (0, 1)]
                     nrem_cluster = np.argmax(dt_means)
                     sleep_states = np.where(labels == nrem_cluster, 0, 1)
@@ -633,7 +666,9 @@ class SleepScoring(SpyglassMixin, dj.Computed):
                     f"REM epochs: {np.sum(sleep_states == 1)}"
                 )
             else:
-                print("Not enough valid sleep epochs for NREM/REM classification")
+                print(
+                    "Not enough valid sleep epochs for NREM/REM classification"
+                )
         else:
             print("Not enough sleep epochs to classify NREM/REM")
 
@@ -643,10 +678,9 @@ class SleepScoring(SpyglassMixin, dj.Computed):
             delta = features["delta_power"]
 
             # Score each sleep epoch by how "REM-like" it is (high theta, low delta)
-            rem_score = (
-                theta / (np.percentile(theta[sleep_mask], 1) + 1e-10)
-                - delta / (np.percentile(delta[sleep_mask], 99) + 1e-10)
-            )
+            rem_score = theta / (
+                np.percentile(theta[sleep_mask], 1) + 1e-10
+            ) - delta / (np.percentile(delta[sleep_mask], 99) + 1e-10)
 
             # Only consider sleep epochs
             candidate_scores = np.where(sleep_mask, rem_score, -np.inf)
@@ -675,7 +709,9 @@ class SleepScoring(SpyglassMixin, dj.Computed):
                     f"({100 * np.sum(rem_mask) / n_sleep:.1f}% of sleep)"
                 )
             else:
-                print("REM fallback: no qualifying epochs found, leaving NREM intact")
+                print(
+                    "REM fallback: no qualifying epochs found, leaving NREM intact"
+                )
 
         return states
 
@@ -686,30 +722,45 @@ class SleepScoring(SpyglassMixin, dj.Computed):
             c: {
                 "delta": np.mean(features["delta_power"][cluster_labels == c]),
                 "theta": np.mean(features["theta_power"][cluster_labels == c]),
-                "emg": np.mean(features["emg_power"][cluster_labels == c])
-                if features.get("emg_power") is not None
-                else 0.0,
-                "dt_ratio": np.mean(features["delta_theta_ratio"][cluster_labels == c]),
+                "emg": (
+                    np.mean(features["emg_power"][cluster_labels == c])
+                    if features.get("emg_power") is not None
+                    else 0.0
+                ),
+                "dt_ratio": np.mean(
+                    features["delta_theta_ratio"][cluster_labels == c]
+                ),
             }
             for c in range(n_clusters)
         }
 
         nrem_cluster = np.argmax(
-            [cluster_means[c]["dt_ratio"] - cluster_means[c]["emg"] for c in range(n_clusters)]
+            [
+                cluster_means[c]["dt_ratio"] - cluster_means[c]["emg"]
+                for c in range(n_clusters)
+            ]
         )
         state_mapping = {nrem_cluster: 0}
 
         remaining = [c for c in range(n_clusters) if c != nrem_cluster]
         if len(remaining) > 1:
-            wake_cluster = remaining[np.argmax([cluster_means[c]["emg"] for c in remaining])]
+            wake_cluster = remaining[
+                np.argmax([cluster_means[c]["emg"] for c in remaining])
+            ]
             state_mapping[wake_cluster] = 2
             rem_cluster = [c for c in remaining if c != wake_cluster][0]
             state_mapping[rem_cluster] = 1
         else:
             r = remaining[0]
-            state_mapping[r] = 2 if cluster_means[r]["emg"] > cluster_means[nrem_cluster]["emg"] else 1
+            state_mapping[r] = (
+                2
+                if cluster_means[r]["emg"] > cluster_means[nrem_cluster]["emg"]
+                else 1
+            )
 
-        return np.array([state_mapping.get(label, 0) for label in cluster_labels])
+        return np.array(
+            [state_mapping.get(label, 0) for label in cluster_labels]
+        )
 
     # ==================== Post-processing ====================
 
@@ -739,7 +790,10 @@ class SleepScoring(SpyglassMixin, dj.Computed):
 
         # Remove single-point transitions
         for i in range(1, len(smoothed) - 1):
-            if smoothed[i] != smoothed[i - 1] and smoothed[i] != smoothed[i + 1]:
+            if (
+                smoothed[i] != smoothed[i - 1]
+                and smoothed[i] != smoothed[i + 1]
+            ):
                 smoothed[i] = smoothed[i - 1]
 
         # Enforce minimum bout duration
