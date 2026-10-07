@@ -32,10 +32,27 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
+    # Versions are left unpinned: spyglass-neuro already pins numpy, scipy,
+    # jax, and datajoint, and repeating those bounds here only lets them drift.
+    "datajoint",
+    "jax",
+    "matplotlib", # also provides `pylab`
+    "nemos",
+    "networkx",
+    "neurospatial",
     "numpy",
-    "scipy",
     "pandas",
-    "matplotlib",
+    "pynwb",
+    "scikit-learn",
+    "scipy",
+    "spyglass-neuro",
+]
+
+optional-dependencies.test = [
+    "docker",    # spins up the MySQL server for database-backed tests
+    "jupytext",  # keeps notebooks and their paired scripts in sync
+    "pytest",
+    "pytest-cov",
 ]
 urls.Homepage = "https://github.com/denissemorales/mPFC-opto"
 urls.Repository = "https://github.com/denissemorales/mPFC-opto"
