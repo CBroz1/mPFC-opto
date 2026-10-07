@@ -1,13 +1,44 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=77"] # >=77 understands the SPDX `license` string
+
 [project]
 name = "mPFC-opto"
 version = "0.1.0"
+description = "Preliminary analysis of mPFC-opto experiments in the Frank Lab at UCSF"
 readme = "README.md"
+keywords = [
+    "datajoint",
+    "electrophysiology",
+    "neuroscience",
+    "nwb",
+    "optogenetics",
+    "prefrontal cortex",
+    "spyglass",
+]
+license = "MIT"
+authors = [
+    { name = "Denisse Morales", email = "Denisse.Morales-Rodriguez@ucsf.edu" },
+]
+requires-python = ">=3.10,<3.13"
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+]
 dependencies = [
     "numpy",
     "scipy",
     "pandas",
     "matplotlib",
 ]
+urls.Homepage = "https://github.com/denissemorales/mPFC-opto"
+urls.Repository = "https://github.com/denissemorales/mPFC-opto"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
