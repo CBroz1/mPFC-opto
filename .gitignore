@@ -28,6 +28,9 @@ Thumbs.db
 # datajoint configs
 dj_*
 
+# pytest --with-db scratch; spyglass populates this as its base dir
+tests/_data/
+
 # csvs
 *.csv
 
