@@ -1,0 +1,45 @@
+default_stages: [pre-commit]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-toml
+      - id: check-yaml
+      - id: check-added-large-files
+      # Both rewrite raw text, which inside a .ipynb means rewriting JSON
+      # string values -- i.e. editing cell contents. black-jupyter owns
+      # notebooks; these two must not touch them.
+      - id: end-of-file-fixer
+        exclude: \.ipynb$
+      - id: trailing-whitespace
+        exclude: \.ipynb$
+
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 1.0.0
+    hooks:
+      - id: mdformat
+        args: [--wrap, "80", --number]
+        additional_dependencies:
+          - mdformat-gfm
+          # Without this, the `---` fences in .github/ISSUE_TEMPLATE/ parse as
+          # thematic breaks and GitHub stops recognizing the templates.
+          - mdformat-frontmatter
+
+  - repo: https://github.com/psf/black
+    rev: 26.3.1
+    hooks:
+      - id: black
+      - id: black-jupyter
+
+  # Lint only. Formatting is black's, so ruff-format is deliberately absent.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.7
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+        # Scoped to tests/ for now. src/ and notebooks/ carry ~189 pre-existing
+        # findings, and several are not safe to autofix: in a DataJoint module an
+        # "unused" table import can be what registers a dependency. Drop this
+        # line once those are triaged.
+        files: ^tests/
