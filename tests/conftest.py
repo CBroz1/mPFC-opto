@@ -145,6 +145,26 @@ def em_module():
 
 
 @pytest.fixture(scope="session")
+def basis_utils():
+    """`basis_utils`: no DataJoint, but still needs jax.
+
+    jax ships a compiled extension tied to a NumPy ABI, so an environment
+    pinned to numpy<2 for spyglass can hold a jax built for NumPy 2 and leave
+    it unimportable. exc_type is required because that surfaces as an
+    ImportError, which importorskip treats as an error rather than a skip.
+    """
+    pytest.importorskip(
+        "jax",
+        reason="jax unimportable (NumPy ABI mismatch?)",
+        exc_type=ImportError,
+    )
+    pytest.importorskip("nemos", exc_type=ImportError)
+    return pytest.importorskip(
+        "mpfc_opto.GLM.basis_utils", exc_type=ImportError
+    )
+
+
+@pytest.fixture(scope="session")
 def glm_basis(server):
     """`GLMBasis`, or skip.
 

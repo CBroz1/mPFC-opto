@@ -1,68 +1,67 @@
-"""Tests for the basis-construction helpers in `GLMBasis`.
+"""Database-backed tests for the `GLMBasis` tables.
 
-`requires_db` even though every function here is pure: they share a module with
-`@schema` tables, so importing it opens a DataJoint connection. Extracting them
-into a table-free module would make these runnable without a server.
-
-Also skipped when `jax` is unimportable; see the `glm_basis` fixture.
+The basis-construction functions this module used to also cover now live in
+`basis_utils`, and are tested without a database in `test_basis_utils.py`. What
+is left here needs a server, because declaring these tables declares them.
 """
 
-import numpy as np
+import datajoint as dj
 import pytest
 
 pytestmark = pytest.mark.requires_db
 
 
-class TestWrapTo2Pi:
-    def test_maps_into_zero_to_two_pi(self, glm_basis):
-        x = np.array([-3 * np.pi, -0.1, 0.0, 1.0, 7.0, 100.0])
-        out = glm_basis._wrap_to_2pi(x)
-        assert np.all(out >= 0)
-        assert np.all(out < 2 * np.pi)
+class TestTableDeclaration:
+    """`GLMBasisParams` -> `GLMBasisSelection` -> `GLMBasis`."""
 
-    def test_is_identity_inside_the_range(self, glm_basis):
-        x = np.array([0.0, 1.0, 3.0, 6.0])
-        assert glm_basis._wrap_to_2pi(x) == pytest.approx(x)
+    @pytest.mark.parametrize(
+        "name,kind",
+        [
+            ("GLMBasisParams", dj.Lookup),
+            ("GLMBasisSelection", dj.Manual),
+            ("GLMBasis", dj.Computed),
+        ],
+    )
+    def test_each_tier_declares(self, glm_basis, name, kind):
+        table = getattr(glm_basis, name)
+        assert issubclass(table, kind)
+        assert table.heading is not None
+        assert len(table.heading.names) > 0
 
-    def test_preserves_angle_modulo_two_pi(self, glm_basis):
-        x = np.array([-1.0, 0.5, 8.0])
-        out = glm_basis._wrap_to_2pi(x)
-        assert np.cos(out) == pytest.approx(np.cos(x))
-        assert np.sin(out) == pytest.approx(np.sin(x))
-
-
-class TestNanToZero:
-    def test_replaces_nan(self, glm_basis):
-        out = np.asarray(glm_basis._nan_to_zero(np.array([1.0, np.nan, 3.0])))
-        assert not np.any(np.isnan(out))
-        assert out[1] == 0.0
-
-    def test_leaves_finite_values_alone(self, glm_basis):
-        x = np.array([[1.0, 2.0], [3.0, 4.0]])
-        assert np.asarray(glm_basis._nan_to_zero(x)) == pytest.approx(x)
-
-    def test_returns_a_jax_array(self, glm_basis):
-        """Downstream code indexes the result with jax semantics."""
-        out = glm_basis._nan_to_zero(np.array([1.0, 2.0]))
-        assert type(out).__module__.startswith("jax")
-
-
-class TestGetUnitColumns:
-    def test_selects_only_unit_columns(self, glm_basis):
-        import pandas as pd
-
-        df = pd.DataFrame(
-            {
-                "time": [0.0, 0.05],
-                "unit_0": [0, 1],
-                "unit_11": [1, 0],
-                "speed": [1.0, 2.0],
-            }
+    # Compared via full_table_name rather than by substring: DataJoint derives
+    # a table's SQL name by splitting CamelCase, so `GLMBasisParams` becomes
+    # `#g_l_m_basis_params` and no readable substring matches.
+    def test_selection_depends_on_params(self, glm_basis):
+        """A Selection table keys on its Params table."""
+        assert (
+            glm_basis.GLMBasisParams.full_table_name
+            in glm_basis.GLMBasisSelection.parents()
         )
-        assert glm_basis.get_unit_columns(df) == ["unit_0", "unit_11"]
 
-    def test_returns_empty_when_there_are_no_units(self, glm_basis):
-        import pandas as pd
+    def test_selection_depends_on_glm_storage(self, glm_basis):
+        """And on the covariate table whose output it expands."""
+        from mpfc_opto.GLM.glm_tables_dmr import GLMStorage
 
-        df = pd.DataFrame({"time": [0.0], "speed": [1.0]})
-        assert glm_basis.get_unit_columns(df) == []
+        assert (
+            GLMStorage.full_table_name in glm_basis.GLMBasisSelection.parents()
+        )
+
+    def test_computed_depends_on_selection(self, glm_basis):
+        assert (
+            glm_basis.GLMBasisSelection.full_table_name
+            in glm_basis.GLMBasis.parents()
+        )
+
+
+class TestTriPartMake:
+    """`GLMBasis` uses the tri-part make pattern rather than a plain `make`."""
+
+    @pytest.mark.parametrize(
+        "method", ["make_fetch", "make_compute", "make_insert"]
+    )
+    def test_defines_each_stage(self, glm_basis, method):
+        assert callable(getattr(glm_basis.GLMBasis, method, None))
+
+    def test_declares_parallel_make(self, glm_basis):
+        """Spyglass only parallelizes populate when this is set."""
+        assert glm_basis.GLMBasis._parallel_make is True
