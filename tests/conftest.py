@@ -165,9 +165,16 @@ def glm_basis(server):
 
 
 @pytest.fixture(scope="session")
+def pss_utils():
+    """`pss_dmr_utils`: numpy and scipy only, so no database."""
+    from mpfc_opto.sleep import pss_dmr_utils
+
+    return pss_dmr_utils
+
+
+@pytest.fixture(scope="session")
 def sleep_pss(server):
-    """`pss_dmr`. Its pure functions sit beside `@schema` tables, so the
-    module cannot be imported at all without a database."""
+    """`pss_dmr`. Declares tables, so importing it needs a database."""
     from mpfc_opto.sleep import pss_dmr
 
     return pss_dmr
