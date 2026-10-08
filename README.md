@@ -31,16 +31,16 @@ mPFC-opto/
 
 ## Pipelines
 
-| Module                            | Tables                                                          |
-| --------------------------------- | --------------------------------------------------------------- |
-| `sleep.sleep_table_dmr`           | `SleepScoringParams` → `SleepScoringSelection` → `SleepScoring` |
-| `sleep.updown_tables_dmr`         | `UpDownStateParams` → `UpDownStateSelection` → `UpDownStates`   |
-| `sleep.pss_dmr`                   | `PSSParams` → `PSSSelection` → `SleepPSS`                       |
-| `behavior.forktrack_tables_dmr`   | `ForkTrackParams` → `ForkTrackSelection` → `ForkTrackEvents`    |
-| `behavior.wtrack_tables_dmr`      | `WTrackParams` → `WTrackSelection` → `WTrackEvents`             |
-| `glm.path_progression_tables_dmr` | `PathProgressSelection` → `PathProgress`                        |
-| `glm.glm_tables_dmr`              | `GLMSelection` → `GLMStorage`                                   |
-| `glm.GLMBasis`                    | `GLMBasisParams` → `GLMBasisSelection` → `GLMBasis`             |
+| Module                        | Tables                                                          |
+| ----------------------------- | --------------------------------------------------------------- |
+| `sleep.sleep_table`           | `SleepScoringParams` → `SleepScoringSelection` → `SleepScoring` |
+| `sleep.updown_tables`         | `UpDownStateParams` → `UpDownStateSelection` → `UpDownStates`   |
+| `sleep.pss`                   | `PSSParams` → `PSSSelection` → `SleepPSS`                       |
+| `behavior.forktrack_tables`   | `ForkTrackParams` → `ForkTrackSelection` → `ForkTrackEvents`    |
+| `behavior.wtrack_tables`      | `WTrackParams` → `WTrackSelection` → `WTrackEvents`             |
+| `glm.path_progression_tables` | `PathProgressSelection` → `PathProgress`                        |
+| `glm.glm_tables`              | `GLMSelection` → `GLMStorage`                                   |
+| `glm.basis`                   | `GLMBasisParams` → `GLMBasisSelection` → `GLMBasis`             |
 
 ## Tests
 

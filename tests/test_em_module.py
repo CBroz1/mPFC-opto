@@ -1,4 +1,4 @@
-"""Tests for the EM entry points in `AS_EM_module`."""
+"""Tests for the EM entry points in `em_module`."""
 
 import numpy as np
 import pytest

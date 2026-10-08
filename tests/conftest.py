@@ -130,18 +130,18 @@ def server():
 
 @pytest.fixture(scope="session")
 def filters_em():
-    """`FiltersEM`: pure numpy, no DataJoint, so it needs no database."""
-    from mpfc_opto.behavior import FiltersEM
+    """`filters_em`: pure numpy, no DataJoint, so it needs no database."""
+    from mpfc_opto.behavior import filters_em
 
-    return FiltersEM
+    return filters_em
 
 
 @pytest.fixture(scope="session")
 def em_module():
-    """`AS_EM_module`: matplotlib and FiltersEM only, still no database."""
-    from mpfc_opto.behavior import AS_EM_module
+    """`em_module`: matplotlib and filters_em only, still no database."""
+    from mpfc_opto.behavior import em_module
 
-    return AS_EM_module
+    return em_module
 
 
 @pytest.fixture(scope="session")
@@ -166,7 +166,7 @@ def basis_utils():
 
 @pytest.fixture(scope="session")
 def glm_basis(server):
-    """`GLMBasis`, or skip.
+    """`glm.basis`, or skip.
 
     Declares tables, so importing it needs a database. Also needs `nemos`/`jax`,
     by way of `basis_utils`.
@@ -179,20 +179,20 @@ def glm_basis(server):
         exc_type=ImportError,
     )
     pytest.importorskip("nemos", exc_type=ImportError)
-    return pytest.importorskip("mpfc_opto.glm.GLMBasis", exc_type=ImportError)
+    return pytest.importorskip("mpfc_opto.glm.basis", exc_type=ImportError)
 
 
 @pytest.fixture(scope="session")
 def pss_utils():
-    """`pss_dmr_utils`: numpy and scipy only, so no database."""
-    from mpfc_opto.sleep import pss_dmr_utils
+    """`pss_utils`: numpy and scipy only, so no database."""
+    from mpfc_opto.sleep import pss_utils
 
-    return pss_dmr_utils
+    return pss_utils
 
 
 @pytest.fixture(scope="session")
 def sleep_pss(server):
-    """`pss_dmr`. Declares tables, so importing it needs a database."""
-    from mpfc_opto.sleep import pss_dmr
+    """`pss`. Declares tables, so importing it needs a database."""
+    from mpfc_opto.sleep import pss
 
-    return pss_dmr
+    return pss

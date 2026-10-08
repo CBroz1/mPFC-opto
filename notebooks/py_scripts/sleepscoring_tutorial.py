@@ -31,12 +31,12 @@ from spyglass.position.position_merge import PositionOutput
 import spyglass.lfp as lfp
 from spyglass.lfp.analysis.v1 import lfp_band
 
-from mpfc_opto.sleep.updown_tables_dmr import (
+from mpfc_opto.sleep.updown_tables import (
     UpDownStateParams,
     UpDownStateSelection,
     UpDownStates,
 )
-from mpfc_opto.sleep.sleep_table_dmr import (
+from mpfc_opto.sleep.sleep_table import (
     SleepScoringParams,
     SleepScoringSelection,
     SleepScoring,

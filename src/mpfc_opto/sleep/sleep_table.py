@@ -23,7 +23,7 @@ from spyglass.common.custom_nwbfile import AnalysisNwbfile
 from spyglass.lfp.analysis.v1 import lfp_band
 from spyglass.position.position_merge import PositionOutput
 from spyglass.utils import SpyglassMixin
-from mpfc_opto.sleep.pss_dmr import PSSParams, PSSSelection, SleepPSS
+from mpfc_opto.sleep.pss import PSSParams, PSSSelection, SleepPSS
 
 schema = dj.schema("denissemorales_sleepscoring")
 VALID_METHODS = {"gmm", "kmeans", "hierarchical"}

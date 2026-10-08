@@ -40,7 +40,7 @@ class TestTableDeclaration:
 
     def test_selection_depends_on_glm_storage(self, glm_basis):
         """And on the covariate table whose output it expands."""
-        from mpfc_opto.glm.glm_tables_dmr import GLMStorage
+        from mpfc_opto.glm.glm_tables import GLMStorage
 
         assert (
             GLMStorage.full_table_name in glm_basis.GLMBasisSelection.parents()

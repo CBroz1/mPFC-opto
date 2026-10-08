@@ -7,7 +7,7 @@ This module defines:
 - SleepPSS: computed PSS trace (timestamps + values)
 - fetch_pss_series: interpolate a stored trace onto target timestamps
 
-The PSD slope fitting itself lives in `pss_dmr_utils`, which has no DataJoint
+The PSD slope fitting itself lives in `pss_utils`, which has no DataJoint
 dependency.
 
 How to use in your sleep scoring pipeline:
@@ -25,7 +25,7 @@ import numpy as np
 from spyglass.lfp.analysis.v1 import lfp_band
 from spyglass.utils import SpyglassMixin
 
-from mpfc_opto.sleep.pss_dmr_utils import (
+from mpfc_opto.sleep.pss_utils import (
     compute_pss_windows_with_timestamps,
 )
 

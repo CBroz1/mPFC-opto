@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from mpfc_opto.behavior import FiltersEM as ff
+from mpfc_opto.behavior import filters_em as ff
 import numpy as np
 import pandas as pd
 

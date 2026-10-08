@@ -17,7 +17,7 @@ from neurospatial.behavior.navigation import path_progress
 from neurospatial import Environment
 import spyglass.linearization.v1 as sgpl
 from spyglass.linearization.merge import LinearizedPositionOutput
-from mpfc_opto.behavior.forktrack_tables_dmr import ForkTrackEvents
+from mpfc_opto.behavior.forktrack_tables import ForkTrackEvents
 
 schema = dj.schema("denissemorales_pathprogress")
 

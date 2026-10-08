@@ -21,12 +21,12 @@ from spyglass.common.custom_nwbfile import AnalysisNwbfile
 from spyglass.position.position_merge import PositionOutput
 from spyglass.linearization.merge import LinearizedPositionOutput
 from spyglass.utils import SpyglassMixin
-from mpfc_opto.glm.path_progression_tables_dmr import (
+from mpfc_opto.glm.path_progression_tables import (
     PathProgressSelection,
     PathProgress,
 )
 from spyglass.spikesorting.analysis.v1.group import SortedSpikesGroup
-from mpfc_opto.behavior.forktrack_tables_dmr import ForkTrackEvents
+from mpfc_opto.behavior.forktrack_tables import ForkTrackEvents
 import spyglass.linearization.v1 as sgpl
 
 schema = dj.schema("denissemorales_glm")

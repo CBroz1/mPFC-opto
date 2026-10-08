@@ -1,6 +1,6 @@
 """Spectral-slope (PSS) computation, independent of DataJoint.
 
-Separated from `pss_dmr` so these can be imported, and tested, without a
+Separated from `pss` so these can be imported, and tested, without a
 database: importing a module that declares tables opens a connection.
 """
 

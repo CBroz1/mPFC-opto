@@ -22,7 +22,7 @@ import numpy as np
 from spyglass.position import PositionOutput
 import spyglass.common as sgc
 import pandas as pd
-from mpfc_opto.behavior.wtrack_tables_dmr import (
+from mpfc_opto.behavior.wtrack_tables import (
     WTrackParams,
     WTrackSelection,
     WTrackEvents,

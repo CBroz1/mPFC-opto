@@ -24,12 +24,12 @@ from spyglass.linearization.merge import LinearizedPositionOutput
 import spyglass.common as sgc
 import pandas as pd
 
-from mpfc_opto.behavior.forktrack_tables_dmr import (
+from mpfc_opto.behavior.forktrack_tables import (
     ForkTrackParams,
     ForkTrackSelection,
     ForkTrackEvents,
 )
-from mpfc_opto.glm.path_progression_tables_dmr import (
+from mpfc_opto.glm.path_progression_tables import (
     PathProgressSelection,
     PathProgress,
 )

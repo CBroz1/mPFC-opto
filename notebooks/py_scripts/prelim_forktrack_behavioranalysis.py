@@ -604,7 +604,7 @@ def check_pump_for_pokes(
 
 # -
 
-from mpfc_opto.behavior.AS_EM_module import EM_main, RunEM
+from mpfc_opto.behavior.em_module import EM_main, RunEM
 
 pump_results_df["resp"] = pump_results_df["pump_triggered"].astype(int)
 

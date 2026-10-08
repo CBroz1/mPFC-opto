@@ -16,11 +16,11 @@ class TestTableDeclaration:
         "module,names",
         [
             (
-                "mpfc_opto.sleep.pss_dmr",
+                "mpfc_opto.sleep.pss",
                 ["PSSParams", "PSSSelection", "SleepPSS"],
             ),
             (
-                "mpfc_opto.sleep.sleep_table_dmr",
+                "mpfc_opto.sleep.sleep_table",
                 [
                     "SleepScoringParams",
                     "SleepScoringSelection",
@@ -28,7 +28,7 @@ class TestTableDeclaration:
                 ],
             ),
             (
-                "mpfc_opto.sleep.updown_tables_dmr",
+                "mpfc_opto.sleep.updown_tables",
                 [
                     "UpDownStateParams",
                     "UpDownStateSelection",
@@ -36,19 +36,19 @@ class TestTableDeclaration:
                 ],
             ),
             (
-                "mpfc_opto.behavior.forktrack_tables_dmr",
+                "mpfc_opto.behavior.forktrack_tables",
                 ["ForkTrackParams", "ForkTrackSelection", "ForkTrackEvents"],
             ),
             (
-                "mpfc_opto.behavior.wtrack_tables_dmr",
+                "mpfc_opto.behavior.wtrack_tables",
                 ["WTrackParams", "WTrackSelection", "WTrackEvents"],
             ),
             (
-                "mpfc_opto.glm.glm_tables_dmr",
+                "mpfc_opto.glm.glm_tables",
                 ["GLMSelection", "GLMStorage"],
             ),
             (
-                "mpfc_opto.glm.path_progression_tables_dmr",
+                "mpfc_opto.glm.path_progression_tables",
                 ["PathProgressSelection", "PathProgress"],
             ),
         ],
@@ -65,6 +65,6 @@ class TestTableDeclaration:
 
     def test_params_tables_are_lookups_with_contents(self, server):
         """Lookup tables should ship default parameter sets."""
-        from mpfc_opto.sleep.pss_dmr import PSSParams
+        from mpfc_opto.sleep.pss import PSSParams
 
         assert len(PSSParams()) >= 0  # declares and queries without error

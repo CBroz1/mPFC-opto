@@ -1,6 +1,6 @@
-"""Tests for the spectral-slope helpers in `pss_dmr_utils`.
+"""Tests for the spectral-slope helpers in `pss_utils`.
 
-`unit`, not `requires_db`: these functions were split out of `pss_dmr` precisely
+`unit`, not `requires_db`: these functions were split out of `pss` precisely
 so they could be imported, and tested, without a database.
 """
 
