@@ -160,7 +160,7 @@ def basis_utils():
     )
     pytest.importorskip("nemos", exc_type=ImportError)
     return pytest.importorskip(
-        "mpfc_opto.GLM.basis_utils", exc_type=ImportError
+        "mpfc_opto.glm.basis_utils", exc_type=ImportError
     )
 
 
@@ -168,10 +168,8 @@ def basis_utils():
 def glm_basis(server):
     """`GLMBasis`, or skip.
 
-    Needs a database, because its basis helpers share a module with `@schema`
-    tables. Also needs `nemos`/`jax`: jax ships a compiled extension tied to a
-    NumPy ABI, so an environment pinned to numpy<2 for spyglass can hold a jax
-    built for NumPy 2 and leave it unimportable.
+    Declares tables, so importing it needs a database. Also needs `nemos`/`jax`,
+    by way of `basis_utils`.
     """
     # exc_type is required: a NumPy ABI mismatch surfaces as ImportError, and
     # importorskip treats that as an error rather than a skip by default.
@@ -181,7 +179,7 @@ def glm_basis(server):
         exc_type=ImportError,
     )
     pytest.importorskip("nemos", exc_type=ImportError)
-    return pytest.importorskip("mpfc_opto.GLM.GLMBasis", exc_type=ImportError)
+    return pytest.importorskip("mpfc_opto.glm.GLMBasis", exc_type=ImportError)
 
 
 @pytest.fixture(scope="session")

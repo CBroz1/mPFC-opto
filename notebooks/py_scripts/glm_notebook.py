@@ -30,14 +30,14 @@ from mpfc_opto.behavior.forktrack_tables_dmr import (
     ForkTrackSelection,
     ForkTrackEvents,
 )
-from mpfc_opto.GLM.path_progression_tables_dmr import (
+from mpfc_opto.glm.path_progression_tables_dmr import (
     PathProgressSelection,
     PathProgress,
 )
-from mpfc_opto.GLM.glm_tables_dmr import GLMSelection, GLMStorage
+from mpfc_opto.glm.glm_tables_dmr import GLMSelection, GLMStorage
 # -
 
-from mpfc_opto.GLM.GLMBasis import GLMBasisParams, GLMBasisSelection, GLMBasis
+from mpfc_opto.glm.GLMBasis import GLMBasisParams, GLMBasisSelection, GLMBasis
 
 nwb_file_name = "Caius20260623_.nwb"
 epoch = 6

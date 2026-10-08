@@ -23,7 +23,7 @@ mPFC-opto/
 ├── notebooks/               # analysis notebooks
 ├── pyproject.toml           # packaging, dependencies, tool config
 ├── src/mpfc_opto/
-│   ├── GLM/                 # encoding models and path progression
+│   ├── glm/                 # encoding models and path progression
 │   ├── behavior/            # fork-track and W-track behavior, EM filters
 │   └── sleep/               # sleep scoring, up/down states, spectral slope
 └── tests/
@@ -38,9 +38,9 @@ mPFC-opto/
 | `sleep.pss_dmr`                   | `PSSParams` → `PSSSelection` → `SleepPSS`                       |
 | `behavior.forktrack_tables_dmr`   | `ForkTrackParams` → `ForkTrackSelection` → `ForkTrackEvents`    |
 | `behavior.wtrack_tables_dmr`      | `WTrackParams` → `WTrackSelection` → `WTrackEvents`             |
-| `GLM.path_progression_tables_dmr` | `PathProgressSelection` → `PathProgress`                        |
-| `GLM.glm_tables_dmr`              | `GLMSelection` → `GLMStorage`                                   |
-| `GLM.GLMBasis`                    | `GLMBasisParams` → `GLMBasisSelection` → `GLMBasis`             |
+| `glm.path_progression_tables_dmr` | `PathProgressSelection` → `PathProgress`                        |
+| `glm.glm_tables_dmr`              | `GLMSelection` → `GLMStorage`                                   |
+| `glm.GLMBasis`                    | `GLMBasisParams` → `GLMBasisSelection` → `GLMBasis`             |
 
 ## Tests
 

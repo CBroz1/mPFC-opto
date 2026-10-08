@@ -29,7 +29,7 @@ def test_package_imports():
 
     for name in (
         "mpfc_opto",
-        "mpfc_opto.GLM",
+        "mpfc_opto.glm",
         "mpfc_opto.behavior",
         "mpfc_opto.sleep",
     ):

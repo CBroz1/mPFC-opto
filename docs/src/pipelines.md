@@ -12,9 +12,10 @@ parameters with input data, and a computed table that does the work.
 | `sleep.updown_tables_dmr` | `UpDownStateParams` → `UpDownStateSelection` → `UpDownStates`   |
 | `sleep.pss_dmr`           | `PSSParams` → `PSSSelection` → `SleepPSS`                       |
 
-`pss_dmr` also exposes the spectral-slope helpers directly. `fit_pss_from_psd`
-returns `(pss, intercept, slope)` where `pss == -slope`, so that a **larger**
-`pss` means a steeper 1/f falloff.
+The spectral-slope computation itself lives in `sleep.pss_dmr_utils`, which has
+no DataJoint dependency and so can be used without a database.
+`fit_pss_from_psd` returns `(pss, intercept, slope)` where `pss == -slope`, so
+that a **larger** `pss` means a steeper 1/f falloff.
 
 ## Behavior
 
@@ -31,10 +32,13 @@ database.
 
 | Module                            | Tables                                              |
 | --------------------------------- | --------------------------------------------------- |
-| `GLM.path_progression_tables_dmr` | `PathProgressSelection` → `PathProgress`            |
-| `GLM.glm_tables_dmr`              | `GLMSelection` → `GLMStorage`                       |
-| `GLM.GLMBasis`                    | `GLMBasisParams` → `GLMBasisSelection` → `GLMBasis` |
+| `glm.path_progression_tables_dmr` | `PathProgressSelection` → `PathProgress`            |
+| `glm.glm_tables_dmr`              | `GLMSelection` → `GLMStorage`                       |
+| `glm.GLMBasis`                    | `GLMBasisParams` → `GLMBasisSelection` → `GLMBasis` |
 
 `GLMStorage` bins spiking, position, path progression, turns, and reward into 50
 ms bins. `GLMBasis` then expands those covariates into `nemos` bases and stores
 the design matrix.
+
+The basis construction lives in `glm.basis_utils`, which like `pss_dmr_utils`
+has no DataJoint dependency, though it does need `jax` and `nemos`.

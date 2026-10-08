@@ -29,7 +29,7 @@ from mpfc_opto.behavior.forktrack_tables_dmr import (
     ForkTrackSelection,
     ForkTrackEvents,
 )
-from mpfc_opto.GLM.path_progression_tables_dmr import (
+from mpfc_opto.glm.path_progression_tables_dmr import (
     PathProgressSelection,
     PathProgress,
 )

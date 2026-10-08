@@ -21,7 +21,7 @@ from spyglass.common.custom_nwbfile import AnalysisNwbfile
 from spyglass.position.position_merge import PositionOutput
 from spyglass.linearization.merge import LinearizedPositionOutput
 from spyglass.utils import SpyglassMixin
-from mpfc_opto.GLM.path_progression_tables_dmr import (
+from mpfc_opto.glm.path_progression_tables_dmr import (
     PathProgressSelection,
     PathProgress,
 )

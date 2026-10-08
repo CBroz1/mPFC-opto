@@ -44,11 +44,11 @@ class TestTableDeclaration:
                 ["WTrackParams", "WTrackSelection", "WTrackEvents"],
             ),
             (
-                "mpfc_opto.GLM.glm_tables_dmr",
+                "mpfc_opto.glm.glm_tables_dmr",
                 ["GLMSelection", "GLMStorage"],
             ),
             (
-                "mpfc_opto.GLM.path_progression_tables_dmr",
+                "mpfc_opto.glm.path_progression_tables_dmr",
                 ["PathProgressSelection", "PathProgress"],
             ),
         ],

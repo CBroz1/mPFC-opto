@@ -12,7 +12,7 @@ rather than kept in notebook state.
 pip install -e ".[test]"
 ```
 
-The `GLM` subpackage additionally needs `nemos` and `neurospatial`, which pull
+The `glm` subpackage additionally needs `nemos` and `neurospatial`, which pull
 in `jax`. `jax` ships a compiled extension tied to a NumPy ABI, and Spyglass
 pins `numpy<2` — so a `jax` built for NumPy 2 will fail to import in a Spyglass
 environment. Install a `jax` built against NumPy 1 if `import jax` raises
@@ -33,7 +33,7 @@ the flag.
 
 ```
 src/mpfc_opto/
-├── GLM/        # encoding models, basis construction, path progression
+├── glm/        # encoding models, basis construction, path progression
 ├── behavior/   # fork-track and W-track behavior, state-space EM filters
 └── sleep/      # sleep scoring, up/down states, spectral slope (PSS)
 ```

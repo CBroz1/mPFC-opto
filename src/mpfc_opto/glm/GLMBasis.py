@@ -27,8 +27,8 @@ import numpy as np
 from pynwb.core import ScratchData
 from spyglass.common.custom_nwbfile import AnalysisNwbfile
 from spyglass.utils import SpyglassMixin, SpyglassMixinPart, logger
-from mpfc_opto.GLM.glm_tables_dmr import GLMStorage
-from mpfc_opto.GLM.basis_utils import (
+from mpfc_opto.glm.glm_tables_dmr import GLMStorage
+from mpfc_opto.glm.basis_utils import (
     build_bases,
     get_unit_columns,
     process_design_matrix,
