@@ -10,6 +10,8 @@ permissions:
   contents: read
 
 jobs:
+  # Runs the pre-commit hooks rather than installing linters directly, so the
+  # tool versions come from .pre-commit-config.yaml.
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -17,12 +19,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install linters
-        run: pip install black ruff
-      - name: Check formatting
-        run: black --check src tests
-      - name: Lint
-        run: ruff check src tests
+      - uses: pre-commit/action@v3.0.1
 
   # Fast feedback: pure-function tests with no database and no Docker.
   test:

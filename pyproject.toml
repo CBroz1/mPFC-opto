@@ -32,15 +32,15 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    # Versions are left unpinned: spyglass-neuro already pins numpy, scipy,
-    # jax, and datajoint, and repeating those bounds here only lets them drift.
-    "datajoint",
-    "jax",
+    "datajoint>=0.14.5,<2",
+    # spyglass requires numpy<2 because of spikeinterface
+    # The window below is what satisfies nemos (>=0.4.28) and numpy 1 (<0.7.2)
+    "jax>=0.4.28,<0.7.2",
     "matplotlib", # also provides `pylab`
     "nemos",
     "networkx",
     "neurospatial",
-    "numpy",
+    "numpy<2",
     "pandas",
     "pynwb",
     "scikit-learn",

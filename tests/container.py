@@ -79,6 +79,8 @@ class DockerMySQLManager:
             name=self.container_name,
             ports={3306: self.port},
             environment=[f"MYSQL_ROOT_PASSWORD={self.password}"],
+            # Synchronous I/O. Slower, more reliable.
+            command=["--innodb-use-native-aio=0"],
             detach=True,
         )
         self._say(f"started {self.container_name} on port {self.port}")
