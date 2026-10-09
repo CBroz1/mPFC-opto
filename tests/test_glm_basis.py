@@ -62,6 +62,9 @@ class TestTriPartMake:
     def test_defines_each_stage(self, glm_basis, method):
         assert callable(getattr(glm_basis.GLMBasis, method, None))
 
-    def test_declares_parallel_make(self, glm_basis):
-        """Spyglass only parallelizes populate when this is set."""
-        assert glm_basis.GLMBasis._parallel_make is True
+    def test_does_not_declare_parallel_make(self, glm_basis):
+        """In spyglass `_parallel_make` means the make function itself spawns a
+        process pool. This one does not, so the flag must stay unset or
+        `populate(processes=N)` routes through NonDaemonPool for nothing."""
+        assert "_parallel_make" not in vars(glm_basis.GLMBasis)
+        assert glm_basis.GLMBasis._parallel_make is False
