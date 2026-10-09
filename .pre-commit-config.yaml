@@ -54,10 +54,7 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.7
     hooks:
+      # No --fix: ruff deletes imports it reads as unused, and a DataJoint
+      # table referenced from a `definition` string looks exactly like one.
+      # Report, and let a person decide.
       - id: ruff-check
-        args: [--fix]
-        # Scoped to tests/ for now. src/ and notebooks/ carry ~189 pre-existing
-        # findings, and several are not safe to autofix: in a DataJoint module an
-        # "unused" table import can be what registers a dependency. Drop this
-        # line once those are triaged.
-        files: ^tests/
