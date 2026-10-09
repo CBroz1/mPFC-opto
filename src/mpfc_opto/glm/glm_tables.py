@@ -213,16 +213,32 @@ class GLMStorage(SpyglassMixin, dj.Computed):
 
         path_progress_df = path_progress_df.copy()
 
-        def _upcoming_turn(row):
-            traj = row["trajectory"]
-            if pd.isna(traj) or traj == "none":
-                return None
-            return upcoming_turn_lookup.get(traj, {}).get(
-                row["track_segment_id"]
-            )
-
-        path_progress_df["upcoming_turn"] = path_progress_df.apply(
-            _upcoming_turn, axis=1
+        # Flatten the two-level lookup and map both columns in one pass.
+        # path_progress_df is one row per position sample, so a row-wise
+        # apply here runs a Python closure ~10^5 times per epoch.
+        turn_by_traj_segment = {
+            (traj, segment): turn
+            for traj, segments in upcoming_turn_lookup.items()
+            for segment, turn in segments.items()
+        }
+        keys = pd.MultiIndex.from_arrays(
+            [
+                path_progress_df["trajectory"],
+                path_progress_df["track_segment_id"],
+            ]
+        )
+        upcoming = pd.Series(
+            keys.map(turn_by_traj_segment),
+            index=path_progress_df.index,
+            dtype=object,
+        )
+        # A missing or "none" trajectory implies no upcoming turn.
+        upcoming[
+            path_progress_df["trajectory"].isna()
+            | (path_progress_df["trajectory"] == "none")
+        ] = None
+        path_progress_df["upcoming_turn"] = upcoming.where(
+            upcoming.notna(), None
         )
 
         path_type_dummies = pd.get_dummies(
