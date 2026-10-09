@@ -11,9 +11,14 @@ import pandas as pd
 
 ################################
 def RunEM(
-    df, p_init=None, fig_ax_list=None, trial_number=None, color="b", label=None
+    df,
+    p_init=None,
+    fig_ax_list=None,
+    trial_number=None,
+    color="b",
+    label=None,
+    figsize=(6, 3),
 ):
-    startflag = 0
     sigma2e = 0.5**2  # start guess
     sigma_init = sigma2e
 

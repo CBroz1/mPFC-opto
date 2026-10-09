@@ -29,7 +29,6 @@ from spyglass.common.custom_nwbfile import AnalysisNwbfile
 from spyglass.utils import SpyglassMixin, SpyglassMixinPart, logger
 from mpfc_opto.glm.glm_tables import GLMStorage
 from mpfc_opto.glm.basis_utils import (
-    build_bases,
     get_unit_columns,
     process_design_matrix,
 )

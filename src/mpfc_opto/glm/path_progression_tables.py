@@ -195,13 +195,6 @@ class PathProgress(SpyglassMixin, dj.Computed):
 
         position_info = linear_position_df
 
-        goal_positions_2d = {
-            "left_arm": np.array([well_positions["left"]]),
-            "right_arm": np.array([well_positions["right"]]),
-            "center": np.array([well_positions["center"]]),
-            "handle": np.array([well_positions["handle"]]),
-        }
-
         # Convert 2D positions to bin indices
         start_bin = env.bin_at(np.array([well_positions["handle"]]))[0]  # home
         left_bin = env.bin_at(np.array([well_positions["left"]]))[0]
@@ -363,9 +356,6 @@ def normalize_well(name):
 def infer_trajectory(row):
     prev_well = normalize_well(row["prev_well"])
     well = normalize_well(row["well_name"])
-    trial_type = (
-        str(row["trial_type"]).lower() if not pd.isna(row["trial_type"]) else ""
-    )
 
     # center-out
     if prev_well == "center" and well == "left":

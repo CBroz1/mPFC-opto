@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 import pynwb
 
-from spyglass.common import IntervalList, Nwbfile
+from spyglass.common import Nwbfile
 from spyglass.common.custom_nwbfile import AnalysisNwbfile
 from spyglass.position.position_merge import PositionOutput
 from spyglass.utils import SpyglassMixin
@@ -186,7 +186,7 @@ class WTrackLogParser:
         )
         reward_events = []
 
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             lines = f.readlines()
 
         i = 0
@@ -522,7 +522,7 @@ class PositionValidator:
             ),
         }
 
-        print(f"\nPosition validation summary:")
+        print("\nPosition validation summary:")
         print(f"  Total pokes: {summary['total_pokes']}")
         print(
             f"  Valid pokes: {summary['valid_pokes']} ({summary['percent_valid']:.1f}%)"
@@ -530,7 +530,7 @@ class PositionValidator:
         print(f"  Invalid pokes: {summary['invalid_pokes']}")
 
         if len(invalid_pokes) > 0:
-            print(f"\nInvalid poke details:")
+            print("\nInvalid poke details:")
             for _, row in invalid_pokes.iterrows():
                 print(
                     f"  {row['well_name']} at t={row['time']:.2f}s, distance={row['distance_to_well']:.1f}"
@@ -739,7 +739,6 @@ class WTrackEvents(SpyglassMixin, dj.Computed):
             prev_well = r.prev_well
             trial_type = "Inbound" if "Center" in well else "Outbound"
             transition = "" if prev_well is None else f"{prev_well}→{well}"
-            prev_well_safe = "" if prev_well is None else prev_well
 
             pump_triggered = False
             pump_time = np.nan

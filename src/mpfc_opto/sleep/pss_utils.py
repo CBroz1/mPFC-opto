@@ -6,8 +6,6 @@ database: importing a module that declares tables opens a connection.
 
 from __future__ import annotations
 
-from typing import Tuple
-
 import numpy as np
 from scipy.signal import welch
 
@@ -15,8 +13,8 @@ from scipy.signal import welch
 def fit_pss_from_psd(
     freqs: np.ndarray,
     psd: np.ndarray,
-    f_range: Tuple[float, float] = (4.0, 90.0),
-) -> Tuple[float, float, float]:
+    f_range: tuple[float, float] = (4.0, 90.0),
+) -> tuple[float, float, float]:
     """Fit log10(PSD) vs log10(freq) and return the inverted slope.
 
     Returns
@@ -53,8 +51,8 @@ def compute_pss_windows(
     fs: float,
     window_s: float = 2.0,
     step_s: float = 1.0,
-    f_range: Tuple[float, float] = (4.0, 90.0),
-) -> Tuple[
+    f_range: tuple[float, float] = (4.0, 90.0),
+) -> tuple[
     np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
 ]:
     """Compute sliding-window PSS from a wideband LFP trace.
@@ -116,8 +114,8 @@ def compute_pss_windows_with_timestamps(
     fs: float,
     window_s: float = 2.0,
     step_s: float = 1.0,
-    f_range: Tuple[float, float] = (4.0, 90.0),
-) -> Tuple[
+    f_range: tuple[float, float] = (4.0, 90.0),
+) -> tuple[
     np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
 ]:
     """Compute sliding-window PSS and return absolute window-center timestamps.

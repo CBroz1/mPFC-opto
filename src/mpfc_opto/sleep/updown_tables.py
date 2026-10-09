@@ -14,7 +14,6 @@ import numpy as np
 from scipy.ndimage import gaussian_filter1d
 from scipy.signal import hilbert
 
-from spyglass.common import IntervalList
 from spyglass.common.custom_nwbfile import AnalysisNwbfile
 from spyglass.lfp.analysis.v1 import lfp_band
 from spyglass.spikesorting.analysis.v1.group import SortedSpikesGroup

@@ -1,7 +1,6 @@
 from operator import truediv
 
 import numpy as np
-from pylab import *
 
 """
 ------------------------------------------------------------------------------
@@ -109,9 +108,9 @@ def BackwardFilter(x_post, x_prior, sigma2_post, sigma2_prior):
 
     T = len(x_post)
     # Initial conditions
-    x_T = zeros(T)
+    x_T = np.zeros(T)
     x_T[T - 1] = x_post[T - 1]
-    sigma2_T = zeros(T)
+    sigma2_T = np.zeros(T)
     sigma2_T[T - 1] = sigma2_post[T - 1]
     A = np.zeros(T)
 
@@ -219,14 +218,12 @@ def FwdFilterEM(y, delta, x_init, sigma2_init, sigma2e, mu):
     T = len(y)
 
     # Data structures
-    x_prior = zeros(T + 1)
-    x_post = zeros(T + 1)
-    sd1 = zeros(T + 1)
+    x_prior = np.zeros(T + 1)
+    x_post = np.zeros(T + 1)
+    sd1 = np.zeros(T + 1)
 
-    next_pred_error = zeros(T + 1)
-
-    sigma2_prior = zeros(T + 1)
-    sigma2_post = zeros(T + 1)
+    sigma2_prior = np.zeros(T + 1)
+    sigma2_post = np.zeros(T + 1)
 
     # FORWARD FILTER
     x_post[0] = x_init
@@ -240,7 +237,7 @@ def FwdFilterEM(y, delta, x_init, sigma2_init, sigma2e, mu):
         x_post[t] = NewtonSolve(x_prior[t], sigma2_prior[t], y[t - 1], 1, mu)
         # x_post[t]  = x_prior[t] + sigma2_post[t]*(y[t] - pt)
 
-        pt = exp(mu + x_post[t]) / (1.0 + exp(mu + x_post[t]))
+        pt = np.exp(mu + x_post[t]) / (1.0 + np.exp(mu + x_post[t]))
 
         sigma2_post[t] = 1.0 / (1.0 / sigma2_prior[t] + pt * (1 - pt))
 

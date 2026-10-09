@@ -75,14 +75,26 @@ class TestRunEM:
         high = em_module.RunEM(df, p_init=0.9, fig_ax_list=axes)[4]
         assert not np.allclose(low, high)
 
-    @pytest.mark.xfail(
-        raises=NameError,
-        strict=True,
-        reason="RunEM references an undefined `figsize` when it has to build "
-        "its own axes; callers must pass fig_ax_list. Remove this xfail when "
-        "the parameter is added.",
-    )
-    def test_runem_without_axes_raises(self, em_module):
+    def test_builds_its_own_axes_when_none_given(self, em_module):
+        """Used to raise NameError: `figsize` was referenced but never a
+        parameter, so any caller that did not pass axes crashed."""
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
         import pandas as pd
 
-        em_module.RunEM(pd.DataFrame({"y": RESPONSES}))
+        fig, ax = em_module.RunEM(pd.DataFrame({"y": RESPONSES}))[:2]
+        assert fig is not None and ax is not None
+        plt.close(fig)
+
+    def test_figsize_sizes_the_figure_it_builds(self, em_module):
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        import pandas as pd
+
+        fig = em_module.RunEM(pd.DataFrame({"y": RESPONSES}), figsize=(7, 2))[0]
+        assert tuple(fig.get_size_inches()) == (7.0, 2.0)
+        plt.close(fig)

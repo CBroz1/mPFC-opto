@@ -10,7 +10,6 @@ Author: DMR
 Date: March 2026
 """
 
-from collections import defaultdict
 import datajoint as dj
 import matplotlib.pyplot as plt
 import numpy as np
@@ -643,7 +642,7 @@ def validate_poke_events(
         ),
     }
 
-    print(f"\nPosition validation summary:")
+    print("\nPosition validation summary:")
     print(f"  Total pokes: {summary['total_pokes']}")
     print(
         f"  Valid pokes: {summary['valid_pokes']} ({summary['percent_valid']:.1f}%)"
@@ -651,7 +650,7 @@ def validate_poke_events(
     print(f"  Invalid pokes: {summary['invalid_pokes']}")
 
     if len(invalid_pokes) > 0:
-        print(f"\nInvalid poke details:")
+        print("\nInvalid poke details:")
         for _, row in invalid_pokes.iterrows():
             print(
                 f"  {row['well_name']} at t={row['time']:.2f}s, distance={row['distance_to_well']:.1f}"

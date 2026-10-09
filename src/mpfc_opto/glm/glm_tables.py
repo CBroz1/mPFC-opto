@@ -19,10 +19,14 @@ import pandas as pd
 from spyglass.common import IntervalList, Nwbfile
 from spyglass.common.custom_nwbfile import AnalysisNwbfile
 from spyglass.position.position_merge import PositionOutput
-from spyglass.linearization.merge import LinearizedPositionOutput
+
+# Referenced only from a table `definition` string, which no static
+# analyzer reads -- removing this import breaks GLMSelection.
+from spyglass.linearization.merge import (  # noqa: F401
+    LinearizedPositionOutput,
+)
 from spyglass.utils import SpyglassMixin
 from mpfc_opto.glm.path_progression_tables import (
-    PathProgressSelection,
     PathProgress,
 )
 from spyglass.spikesorting.analysis.v1.group import SortedSpikesGroup

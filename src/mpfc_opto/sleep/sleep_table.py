@@ -18,94 +18,99 @@ from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import StandardScaler
 
 import spyglass.lfp as lfp
-from spyglass.common import IntervalList
 from spyglass.common.custom_nwbfile import AnalysisNwbfile
 from spyglass.lfp.analysis.v1 import lfp_band
 from spyglass.position.position_merge import PositionOutput
 from spyglass.utils import SpyglassMixin
-from mpfc_opto.sleep.pss import PSSParams, PSSSelection, SleepPSS
+from mpfc_opto.sleep.pss import SleepPSS
 
 schema = dj.schema("denissemorales_sleepscoring")
 VALID_METHODS = {"gmm", "kmeans", "hierarchical"}
 
 
-@schema
-class SleepScoringParams(SpyglassMixin, dj.Lookup):
-    definition = """
-    sleep_scoring_params_name: varchar(64)
-    ---
-    # Classification parameters
-    method: varchar(32)              # Classification method (gmm | kmeans | hierarchical)
-    use_hierarchical: bool           # Use two-stage classification
-    use_pss: bool                    # Include power spectrum slope if available
-
-    # Smoothing parameters
-    power_smoothing: float           # Gaussian smoothing sigma for power (seconds)
-    speed_smoothing: float           # Gaussian smoothing sigma for speed (seconds)
-
-    # Constraint parameters
-    apply_constraints: bool          # Apply physiological constraints
-    rem_cannot_follow_wake: bool     # REM cannot directly follow WAKE
-    constraint_max_iterations: int    # Max iterations for constraint enforcement
-
-    # State duration parameters
-    min_duration: float              # Minimum state bout duration (seconds)
-
-    # Wake detection parameters
-    speed_threshold: float           # Speed threshold for wake detection (cm/s)
-    use_speed_for_wake: bool         # Use speed instead of EMG for wake detection
-    """
-
-    contents = [
-        {
-            "sleep_scoring_params_name": "hierarchical",
-            "method": "hierarchical",
-            "use_hierarchical": True,
-            "use_pss": False,
-            "power_smoothing": 0.5,
-            "speed_smoothing": 0.5,
-            "apply_constraints": True,
-            "rem_cannot_follow_wake": True,
-            "constraint_max_iterations": 15,
-            "min_duration": 5.0,
-            "speed_threshold": 3.0,
-            "use_speed_for_wake": True,
-        }
-    ]
-
-    def insert1(self, row, **kwargs):
-        method = row.get("method")
-        if method not in VALID_METHODS:
-            raise ValueError(
-                f"Invalid method '{method}'. Must be one of: {VALID_METHODS}"
-            )
-        super().insert1(row, **kwargs)
-
-
-@schema
-class SleepScoringSelection(SpyglassMixin, dj.Manual):
-    definition = """
-    -> SleepScoringParams
-    target_interval_list_name: varchar(64)
-    nwb_file_name: varchar(64)
-    theta_filter_name='': varchar(64)
-    delta_filter_name='': varchar(64)
-    lfp_merge_id: uuid               # Shared LFP merge ID (theta and delta use different filter_names on the same merge)
-    ---
-    emg_merge_id=null: uuid          # Optional EMG band power merge ID
-    pss_merge_id=null: uuid          # Optional PSS merge ID
-
-    # Position merge
-    pos_merge_id: uuid               # PositionOutput merge ID
-
-    # Sampling rate for power features
-    filter_sampling_rate: float
-
-    emg_filter_name='': varchar(64)
-    pss_filter_name='': varchar(64)
-    """
-
-
+# NOTE: SleepScoringParams is replaced by the duplicate instance below.
+# Python binds the last definition of a name, so this copy never
+# reaches DataJoint. The two were byte-identical when commented out.
+# @schema
+# class SleepScoringParams(SpyglassMixin, dj.Lookup):
+#     definition = """
+#     sleep_scoring_params_name: varchar(64)
+#     ---
+#     # Classification parameters
+#     method: varchar(32)              # Classification method (gmm | kmeans | hierarchical)
+#     use_hierarchical: bool           # Use two-stage classification
+#     use_pss: bool                    # Include power spectrum slope if available
+#
+#     # Smoothing parameters
+#     power_smoothing: float           # Gaussian smoothing sigma for power (seconds)
+#     speed_smoothing: float           # Gaussian smoothing sigma for speed (seconds)
+#
+#     # Constraint parameters
+#     apply_constraints: bool          # Apply physiological constraints
+#     rem_cannot_follow_wake: bool     # REM cannot directly follow WAKE
+#     constraint_max_iterations: int    # Max iterations for constraint enforcement
+#
+#     # State duration parameters
+#     min_duration: float              # Minimum state bout duration (seconds)
+#
+#     # Wake detection parameters
+#     speed_threshold: float           # Speed threshold for wake detection (cm/s)
+#     use_speed_for_wake: bool         # Use speed instead of EMG for wake detection
+#     """
+#
+#     contents = [
+#         {
+#             "sleep_scoring_params_name": "hierarchical",
+#             "method": "hierarchical",
+#             "use_hierarchical": True,
+#             "use_pss": False,
+#             "power_smoothing": 0.5,
+#             "speed_smoothing": 0.5,
+#             "apply_constraints": True,
+#             "rem_cannot_follow_wake": True,
+#             "constraint_max_iterations": 15,
+#             "min_duration": 5.0,
+#             "speed_threshold": 3.0,
+#             "use_speed_for_wake": True,
+#         }
+#     ]
+#
+#     def insert1(self, row, **kwargs):
+#         method = row.get("method")
+#         if method not in VALID_METHODS:
+#             raise ValueError(
+#                 f"Invalid method '{method}'. Must be one of: {VALID_METHODS}"
+#             )
+#         super().insert1(row, **kwargs)
+#
+#
+# NOTE: SleepScoringSelection is replaced by the duplicate instance below.
+# Python binds the last definition of a name, so this copy never
+# reaches DataJoint. The two were byte-identical when commented out.
+# @schema
+# class SleepScoringSelection(SpyglassMixin, dj.Manual):
+#     definition = """
+#     -> SleepScoringParams
+#     target_interval_list_name: varchar(64)
+#     nwb_file_name: varchar(64)
+#     theta_filter_name='': varchar(64)
+#     delta_filter_name='': varchar(64)
+#     lfp_merge_id: uuid               # Shared LFP merge ID (theta and delta use different filter_names on the same merge)
+#     ---
+#     emg_merge_id=null: uuid          # Optional EMG band power merge ID
+#     pss_merge_id=null: uuid          # Optional PSS merge ID
+#
+#     # Position merge
+#     pos_merge_id: uuid               # PositionOutput merge ID
+#
+#     # Sampling rate for power features
+#     filter_sampling_rate: float
+#
+#     emg_filter_name='': varchar(64)
+#     pss_filter_name='': varchar(64)
+#     """
+#
+#
 @schema
 class SleepScoringParams(SpyglassMixin, dj.Lookup):
     definition = """
