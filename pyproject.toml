@@ -69,8 +69,22 @@ line-length = 80
 [tool.ruff]
 line-length = 80
 src = ["src", "tests"]
+# Generated from the notebooks by jupytext; lint the notebook, not the copy.
+extend-exclude = ["notebooks/py_scripts"]
 # No "I": black owns formatting, and import sorting is not used here.
 lint.extend-select = ["UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"notebooks/*.ipynb" = [
+    "E402", # imports after code: how a notebook is written
+    "F401", # imports kept for later cells, or for their display side effects
+    "F811", # a cell redefining a name from an earlier cell
+    # F821 is suppressed under protest: four notebooks reference names that are
+    # never defined, so those cells raise NameError if run top-to-bottom.
+    # Listed in .claude/TASKS.md -- fixing them needs the author's intent, not a
+    # lint pass.
+    "F821",
+]
 
 [tool.pytest.ini_options]
 addopts = "-q"
