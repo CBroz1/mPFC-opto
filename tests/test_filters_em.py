@@ -168,14 +168,24 @@ class TestTransformToProb:
             assert np.all(arr > 0) and np.all(arr < 1)
 
     def test_is_deterministic(self, filters_em):
-        """`TransformToProb` reseeds numpy's global RNG, so repeated calls
-        agree -- at the cost of resetting RNG state its caller may rely on."""
+        """Repeated calls agree: the simulation seeds its own generator."""
         meanv, sigma2 = np.array([0.0, 0.3]), np.full(2, 0.09)
         first = filters_em.TransformToProb(meanv, sigma2, 0.0)
-        np.random.seed(12345)
         second = filters_em.TransformToProb(meanv, sigma2, 0.0)
         for a, b in zip(first, second):
             assert a == pytest.approx(b)
+
+    def test_leaves_the_global_rng_alone(self, filters_em):
+        """It used to call np.random.seed(0), resetting the caller's stream."""
+        meanv, sigma2 = np.array([0.0, 0.3]), np.full(2, 0.09)
+        np.random.seed(12345)
+        expected = np.random.normal(size=3)
+
+        np.random.seed(12345)
+        filters_em.TransformToProb(meanv, sigma2, 0.0)
+        after = np.random.normal(size=3)
+
+        assert after == pytest.approx(expected)
 
     def test_wider_posterior_widens_the_interval(self, filters_em):
         meanv = np.array([0.0])

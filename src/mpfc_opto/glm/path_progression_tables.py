@@ -12,7 +12,7 @@ import pandas as pd
 import networkx as nx
 from spyglass.common import Nwbfile
 from spyglass.common.custom_nwbfile import AnalysisNwbfile
-from spyglass.utils import SpyglassMixin
+from spyglass.utils import SpyglassMixin, logger
 from neurospatial.behavior.navigation import path_progress
 from neurospatial import Environment
 import spyglass.linearization.v1 as sgpl
@@ -191,7 +191,7 @@ class PathProgress(SpyglassMixin, dj.Computed):
             direction="backward",
         )
 
-        print(linear_position_df["trajectory"].value_counts(dropna=False))
+        logger.info(linear_position_df["trajectory"].value_counts(dropna=False))
 
         position_info = linear_position_df
 
@@ -201,9 +201,11 @@ class PathProgress(SpyglassMixin, dj.Computed):
         right_bin = env.bin_at(np.array([well_positions["right"]]))[0]
         center_bin = env.bin_at(np.array([well_positions["center"]]))[0]
 
-        print(
-            start_bin, left_bin, right_bin, center_bin
-        )  # verify these are valid (>= 0)
+        # All four must be valid bin indices (>= 0).
+        logger.info(
+            f"bins: start={start_bin} left={left_bin} "
+            f"right={right_bin} center={center_bin}"
+        )
 
         _orig_to_scipy_sparse_array = nx.to_scipy_sparse_array
 
@@ -226,7 +228,9 @@ class PathProgress(SpyglassMixin, dj.Computed):
 
         xy_cols = ["projected_x_position", "projected_y_position"]
         finite_mask = np.isfinite(position_info[xy_cols].values).all(axis=1)
-        print(f"Dropping {(~finite_mask).sum()} of {len(position_info)} rows")
+        logger.info(
+            f"Dropping {(~finite_mask).sum()} of {len(position_info)} rows"
+        )
 
         position_info = position_info.loc[finite_mask].reset_index(drop=True)
         linear_position_df = linear_position_df.loc[finite_mask].reset_index(

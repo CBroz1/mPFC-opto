@@ -21,7 +21,7 @@ import pynwb
 from spyglass.common import Nwbfile
 from spyglass.common.custom_nwbfile import AnalysisNwbfile
 from spyglass.position.position_merge import PositionOutput
-from spyglass.utils import SpyglassMixin
+from spyglass.utils import SpyglassMixin, logger
 
 schema = dj.schema("denissemorales_wtrack")
 
@@ -60,9 +60,11 @@ class WTrackValidator:
             gt_up_times = data["times"][up_mask]
             name_to_gt_times[well_name] = np.sort(gt_up_times)
 
-            print(f"Ground truth for {well_name}: {len(gt_up_times)} UP events")
+            logger.info(
+                f"Ground truth for {well_name}: {len(gt_up_times)} UP events"
+            )
             if len(gt_up_times) > 0:
-                print(
+                logger.info(
                     f"  Time range: {gt_up_times.min():.2f} to {gt_up_times.max():.2f}"
                 )
 
@@ -77,9 +79,11 @@ class WTrackValidator:
                 else np.array([])
             )
 
-            print(f"\nProcessed {well_name}: {len(extracted_times)} events")
+            logger.info(
+                f"\nProcessed {well_name}: {len(extracted_times)} events"
+            )
             if len(extracted_times) > 0:
-                print(
+                logger.info(
                     f"  Time range: {extracted_times.min():.2f} to {extracted_times.max():.2f}"
                 )
 
@@ -522,17 +526,17 @@ class PositionValidator:
             ),
         }
 
-        print("\nPosition validation summary:")
-        print(f"  Total pokes: {summary['total_pokes']}")
-        print(
+        logger.info("\nPosition validation summary:")
+        logger.info(f"  Total pokes: {summary['total_pokes']}")
+        logger.info(
             f"  Valid pokes: {summary['valid_pokes']} ({summary['percent_valid']:.1f}%)"
         )
-        print(f"  Invalid pokes: {summary['invalid_pokes']}")
+        logger.info(f"  Invalid pokes: {summary['invalid_pokes']}")
 
         if len(invalid_pokes) > 0:
-            print("\nInvalid poke details:")
+            logger.info("\nInvalid poke details:")
             for _, row in invalid_pokes.iterrows():
-                print(
+                logger.info(
                     f"  {row['well_name']} at t={row['time']:.2f}s, distance={row['distance_to_well']:.1f}"
                 )
 
@@ -894,13 +898,17 @@ class WTrackEvents(SpyglassMixin, dj.Computed):
 
 def interpolate_position(position_times, position_x, position_y, query_times):
 
-    print(query_times.min(), query_times.max())
-    print(position_times[0], position_times[-1])
+    logger.debug(
+        f"interpolating {len(query_times)} times in "
+        f"[{query_times.min()}, {query_times.max()}] from position "
+        f"spanning [{position_times[0]}, {position_times[-1]}]"
+    )
 
     position_times = np.asarray(position_times)
-    assert np.all(
-        np.diff(position_times) > 0
-    ), "position_times not strictly increasing"
+    # Not an assert: assertions are stripped under `python -O`, and np.interp
+    # silently returns garbage for unsorted sample times.
+    if not np.all(np.diff(position_times) > 0):
+        raise ValueError("position_times is not strictly increasing")
 
     interp_x = np.interp(query_times, position_times, position_x)
     interp_y = np.interp(query_times, position_times, position_y)

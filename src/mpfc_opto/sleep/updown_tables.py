@@ -17,7 +17,7 @@ from scipy.signal import hilbert
 from spyglass.common.custom_nwbfile import AnalysisNwbfile
 from spyglass.lfp.analysis.v1 import lfp_band
 from spyglass.spikesorting.analysis.v1.group import SortedSpikesGroup
-from spyglass.utils import SpyglassMixin
+from spyglass.utils import SpyglassMixin, logger
 
 from mpfc_opto.sleep.sleep_table import SleepScoring
 
@@ -348,9 +348,9 @@ class UpDownStates(SpyglassMixin, dj.Computed):
             near_trough[nrem_mask] & low_mua[nrem_mask], 0, 1
         )
 
-        print(f"near_trough (NREM): {near_trough[nrem_mask].mean():.2%}")
-        print(f"low_mua (NREM): {low_mua[nrem_mask].mean():.2%}")
-        print(
+        logger.info(f"near_trough (NREM): {near_trough[nrem_mask].mean():.2%}")
+        logger.info(f"low_mua (NREM): {low_mua[nrem_mask].mean():.2%}")
+        logger.info(
             f"joint (NREM): {(near_trough[nrem_mask] & low_mua[nrem_mask]).mean():.2%}"
         )
         return states

@@ -1,6 +1,11 @@
+import logging
 from operator import truediv
 
 import numpy as np
+
+# Standard library logging, not spyglass's: this module defines no tables and
+# is tested without spyglass installed.
+logger = logging.getLogger(__name__)
 
 """
 ------------------------------------------------------------------------------
@@ -13,7 +18,12 @@ def TransformToProb(meanv, sigma2, mu):
     # compute upper and lower bounds of conf intervals by simulation
     NUM_SAMPS = 10000
 
-    np.random.seed(0)  # start at same random number each time
+    # A local generator, not np.random.seed: reseeding the global RNG would
+    # silently reset the stream of whatever called this. RandomState and not
+    # default_rng, because RandomState(0) draws exactly what seed(0) did and so
+    # the confidence bounds below are unchanged; default_rng uses a different
+    # algorithm and would move every number.
+    rng = np.random.RandomState(0)
     T = len(meanv)
     p = np.zeros(T)
     pll = np.zeros(T)
@@ -22,7 +32,7 @@ def TransformToProb(meanv, sigma2, mu):
     sigma = np.sqrt(sigma2)
 
     for t in range(T):
-        s = np.random.normal(meanv[t], sigma[t], NUM_SAMPS)
+        s = rng.normal(meanv[t], sigma[t], NUM_SAMPS)
         ps = map(truediv, np.exp(s + mu), (1.0 + np.exp(s + mu)))
         ps = list(ps)  # JAG ADDED
         sorted_ps = sorted(ps)
@@ -167,11 +177,11 @@ def EM(xx, mu, sigma2e, x_init, sigma_init):
 
     if its == max_its:
         converge_flag = 1
-        print("Did not converge in 3000 iterations")
+        logger.warning("Did not converge in 3000 iterations")
     else:
         converge_flag = 0
-        print("Converged after " + str(its) + " iterations")
-        print("sigma2e is ", sigma2e)
+        logger.info("Converged after " + str(its) + " iterations")
+        logger.info(f"sigma2e is {sigma2e}")
 
     x_post = x_post[1:]
     sigma2_post = sigma2_post[1:]

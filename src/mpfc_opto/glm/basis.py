@@ -15,7 +15,7 @@ Tables (Params -> Selection -> Computed "tripartite" pattern):
   GLMBasisSelection  (dj.Manual)   -- GLMStorage entry x GLMBasisParams
   GLMBasis           (dj.Computed) -- builds + stores the design matrix via the
                                        tri-part make pattern (make_fetch /
-                                       make_compute / make_insert, _parallel_make = True)
+                                       make_compute / make_insert)
 
 `GLMBasisSelection` keys on `GLMStorage` and `GLMBasisParams` only. Add
 `GLMSelection` to its definition if the basis should also key on the covariate
@@ -162,11 +162,13 @@ class GLMBasis(SpyglassMixin, dj.Computed):
         -> AnalysisNwbfile
         """
 
-    # tri-part make: replaces a monolithic make() / `_use_transaction = False`.
-    # make_fetch and make_compute run OUTSIDE the DB transaction (so the long-running
-    # basis-building + NWB-file writing below doesn't hold a table lock); only
-    # make_insert runs inside a transaction, and it does nothing but insert.
-    _parallel_make = True
+    # Tri-part make: make_fetch and make_compute run outside the transaction,
+    # so basis building and the NWB write do not hold a table lock. Only
+    # make_insert runs inside one, and it does nothing but insert.
+    #
+    # No `_parallel_make`: in spyglass that flag means the make function itself
+    # spawns a process pool, which this one does not. Setting it only routes
+    # `populate(processes=N)` through NonDaemonPool for no reason.
 
     def make_fetch(self, key):
         """Read inputs. Read-only, deterministic, no DB writes."""

@@ -21,7 +21,7 @@ import spyglass.lfp as lfp
 from spyglass.common.custom_nwbfile import AnalysisNwbfile
 from spyglass.lfp.analysis.v1 import lfp_band
 from spyglass.position.position_merge import PositionOutput
-from spyglass.utils import SpyglassMixin
+from spyglass.utils import SpyglassMixin, logger
 from mpfc_opto.sleep.pss import SleepPSS
 
 schema = dj.schema("denissemorales_sleepscoring")
@@ -262,7 +262,7 @@ class SleepScoring(SpyglassMixin, dj.Computed):
             emg_df = (
                 lfp.LFPOutput & {"merge_id": sel["emg_merge_id"]}
             ).fetch1_dataframe()
-            print(f"Fetched EMG dataframe with shape {emg_df.shape}")
+            logger.info(f"Fetched EMG dataframe with shape {emg_df.shape}")
             emg_timestamps, emg_corr = self.emg_from_lfp_corr(
                 emg_df, output_fs=2.0
             )
@@ -368,12 +368,12 @@ class SleepScoring(SpyglassMixin, dj.Computed):
 
             if np.any(rem_mask):
                 states[rem_mask] = 1
-                print(
+                logger.info(
                     f"REM fallback applied: {np.sum(rem_mask)} epochs set to REM "
                     f"({100 * np.sum(rem_mask) / n_sleep:.1f}% of sleep)"
                 )
             else:
-                print(
+                logger.info(
                     "REM fallback: no qualifying epochs found, leaving NREM intact"
                 )
 
@@ -627,14 +627,16 @@ class SleepScoring(SpyglassMixin, dj.Computed):
             wake_mask = emg_z > thr
 
             wake_fraction = float(np.mean(wake_mask))
-            print(
+            logger.info(
                 f"Wake detection using EMG: threshold={thr:.3f}, "
                 f"wake_fraction={wake_fraction:.3f}"
             )
 
             # Fail-safe: if EMG is too permissive or too sparse, fall back to speed.
             if wake_fraction > 0.6 or wake_fraction < 0.01:
-                print("EMG separation looks bad; falling back to head speed")
+                logger.info(
+                    "EMG separation looks bad; falling back to head speed"
+                )
                 if use_speed and features.get("speed_wake") is not None:
                     wake_mask = features["speed_wake"].astype(bool)
                 else:
@@ -642,13 +644,13 @@ class SleepScoring(SpyglassMixin, dj.Computed):
 
         elif use_speed and features.get("speed_wake") is not None:
             wake_mask = features["speed_wake"].astype(bool)
-            print(
+            logger.info(
                 f"Wake detection using head speed: {np.sum(wake_mask)} epochs WAKE"
             )
 
         else:
             wake_mask = np.zeros(n, dtype=bool)
-            print("No EMG or head speed: assuming all sleep")
+            logger.info("No EMG or head speed: assuming all sleep")
 
         sleep_mask = ~wake_mask
         states[wake_mask] = 2
@@ -682,16 +684,16 @@ class SleepScoring(SpyglassMixin, dj.Computed):
                     sleep_states = np.where(dt_valid >= threshold, 0, 1)
 
                 states[sleep_indices_valid] = sleep_states
-                print(
+                logger.info(
                     f"NREM epochs: {np.sum(sleep_states == 0)}, "
                     f"REM epochs: {np.sum(sleep_states == 1)}"
                 )
             else:
-                print(
+                logger.info(
                     "Not enough valid sleep epochs for NREM/REM classification"
                 )
         else:
-            print("Not enough sleep epochs to classify NREM/REM")
+            logger.info("Not enough sleep epochs to classify NREM/REM")
 
         # REM fallback — find high-theta / low-delta epochs within sleep, but cap assignment
         if np.mean(states == 1) < 0.02 and np.any(sleep_mask):
@@ -725,12 +727,12 @@ class SleepScoring(SpyglassMixin, dj.Computed):
 
             if np.any(rem_mask):
                 states[rem_mask] = 1
-                print(
+                logger.info(
                     f"REM fallback applied: {np.sum(rem_mask)} epochs set to REM "
                     f"({100 * np.sum(rem_mask) / n_sleep:.1f}% of sleep)"
                 )
             else:
-                print(
+                logger.info(
                     "REM fallback: no qualifying epochs found, leaving NREM intact"
                 )
 
