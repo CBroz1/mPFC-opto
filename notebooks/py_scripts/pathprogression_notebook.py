@@ -57,10 +57,6 @@ def normalize_well(name):
 def infer_trajectory(row):
     prev_well = normalize_well(row["prev_well"])
     well = normalize_well(row["well_name"])
-    trial_type = (
-        str(row["trial_type"]).lower() if not pd.isna(row["trial_type"]) else ""
-    )
-
     # center-out
     if prev_well == "center" and well == "left":
         return "center_to_left"
@@ -274,8 +270,6 @@ for i in range(5):
     print(f"neuron {i}: {n_in}/{len(spk)} spikes inside maze window")
 
 # +
-from __future__ import annotations
-
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -1154,8 +1148,6 @@ for traj in trajectories:
 plt.show()
 
 # +
-from __future__ import annotations
-
 from pathlib import Path
 
 import matplotlib.pyplot as plt

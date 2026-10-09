@@ -528,7 +528,7 @@ plt.tight_layout(rect=[0, 0, 1, 0.96])
 plt.show()
 # -
 
-rewarded_pokes = pump_results_df[pump_results_df["pump_triggered"] == True]
+rewarded_pokes = pump_results_df[pump_results_df["pump_triggered"]]
 rewarded_pokes
 
 len(rewarded_pokes)
@@ -865,7 +865,7 @@ for ax, (ttype, color) in zip(axes, colors.items()):
 axes[0].set_ylabel("P(Correct)", fontsize=12)
 axes[1].set_ylabel("P(Correct)", fontsize=12)
 fig.suptitle(
-    f"Caius Fork Track Performance On Time + Delayed",
+    "Caius Fork Track Performance On Time + Delayed",
     fontsize=13,
     #  fontweight='bold',
     y=1.02,
@@ -989,7 +989,7 @@ plt.show()
 
 learning_trials
 
-incorrect = pump_results_df[pump_results_df["pump_triggered"] == False]
+incorrect = pump_results_df[~pump_results_df["pump_triggered"]]
 center_incorrect = incorrect[incorrect["well_name"] == "Center_poke"]
 center_incorrect
 

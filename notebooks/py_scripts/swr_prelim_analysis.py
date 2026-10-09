@@ -207,7 +207,7 @@ for start in ripple_times["start_time"]:
 
     # Only keep every other timestamp
     timestamps_in_window = timestamps_in_window.iloc[::40]
-    delays.append((timestamps_in_window - start))
+    delays.append(timestamps_in_window - start)
 # -
 
 timestamps_in_window
