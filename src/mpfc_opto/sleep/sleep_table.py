@@ -264,23 +264,22 @@ class SleepScoring(SpyglassMixin, dj.Computed):
         # PSS (optional)
         pss_data = None
         if params["use_pss"]:
-            pss_timestamps = (
+            # One fetch1, not two fetches. As two independent queries there was
+            # no guarantee both returned the same row, so timestamps from one
+            # PSS parameter set could be paired with values from another.
+            #
+            # This restriction is still short of SleepPSS's full key -- it omits
+            # the PSS parameter set and source filter -- so fetch1 raises where
+            # the old code silently took the first row. That is the intended
+            # behaviour: scoring against an unidentified PSS trace is worse than
+            # stopping. Pinning it properly needs a foreign key on the Selection.
+            pss_timestamps, pss_values = (
                 SleepPSS
                 & {
                     "nwb_file_name": sel["nwb_file_name"],
                     "lfp_merge_id": sel["lfp_merge_id"],
                 }
-            ).fetch("pss_timestamps")[0]
-            pss_values = (
-                SleepPSS
-                & {
-                    "nwb_file_name": sel["nwb_file_name"],
-                    "lfp_merge_id": sel["lfp_merge_id"],
-                }
-            ).fetch("pss_values")[0]
-            print(
-                pss_timestamps.shape, pss_values.shape, theta_timestamps.shape
-            )
+            ).fetch1("pss_timestamps", "pss_values")
             pss_data = np.interp(theta_timestamps, pss_timestamps, pss_values)
 
         return {
