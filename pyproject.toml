@@ -45,7 +45,7 @@ dependencies = [
     "pynwb",
     "scikit-learn",
     "scipy",
-    "spyglass-neuro",
+    "spyglass-neuro>=0.6.0", # for custom_nwbfile
 ]
 
 optional-dependencies.test = [
