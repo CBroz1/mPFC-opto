@@ -68,3 +68,58 @@ class TestTableDeclaration:
         from mpfc_opto.sleep.pss import PSSParams
 
         assert len(PSSParams()) >= 0  # declares and queries without error
+
+
+class TestMakeKeyPinsUpstream:
+    """`make` restricts upstream tables with `key`, so `key` must pin them.
+
+    These guard the restrictions in `GLMStorage.make_fetch` and
+    `PathProgress.make_fetch`. Both previously restricted on `epoch`, which is
+    a *secondary* attribute and therefore matches across sessions and parameter
+    sets. The fix relies on each upstream table's primary key being wholly
+    contained in the computed table's own key; if a `->` dependency is ever
+    dropped from a Selection definition, `& key` silently stops pinning and
+    these fail.
+    """
+
+    @pytest.mark.parametrize(
+        "selection,upstream",
+        [
+            ("GLMSelection", "ForkTrackEvents"),
+            ("GLMSelection", "PathProgress"),
+            ("PathProgressSelection", "ForkTrackEvents"),
+        ],
+    )
+    def test_key_contains_upstream_primary_key(
+        self, server, selection, upstream
+    ):
+        from mpfc_opto.behavior.forktrack_tables import ForkTrackEvents
+        from mpfc_opto.glm.glm_tables import GLMSelection
+        from mpfc_opto.glm.path_progression_tables import (
+            PathProgress,
+            PathProgressSelection,
+        )
+
+        tables = {
+            "GLMSelection": GLMSelection,
+            "PathProgressSelection": PathProgressSelection,
+            "ForkTrackEvents": ForkTrackEvents,
+            "PathProgress": PathProgress,
+        }
+        missing = set(tables[upstream].primary_key) - set(
+            tables[selection].primary_key
+        )
+        assert not missing, (
+            f"{selection}'s key does not pin {upstream}: {sorted(missing)} "
+            f"absent, so `& key` would match more than one row"
+        )
+
+    def test_epoch_is_not_a_primary_key_attribute(self, server):
+        """The premise of the bug these replaced: `epoch` does not identify a
+        row, so it must never be the whole restriction."""
+        from mpfc_opto.behavior.forktrack_tables import ForkTrackEvents
+        from mpfc_opto.glm.path_progression_tables import PathProgress
+
+        for table in (ForkTrackEvents, PathProgress):
+            assert "epoch" in table.heading.names
+            assert "epoch" not in table.primary_key

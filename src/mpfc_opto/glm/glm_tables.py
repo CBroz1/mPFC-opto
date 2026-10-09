@@ -84,11 +84,12 @@ class GLMStorage(SpyglassMixin, dj.Computed):
             PositionOutput & {"merge_id": selection["pos_merge_id"]}
         ).fetch1_dataframe()
 
+        # Restricted by `key`, not by nwb_file_name/epoch: `epoch` is a
+        # secondary attribute, so restricting on it ignores which
+        # ForkTrackParams and which position source produced these events.
+        # GLMSelection declares `-> ForkTrackEvents`, so `key` pins all of it.
         forktrack_results = pd.DataFrame(
-            (
-                ForkTrackEvents()
-                & {"nwb_file_name": nwb_file_name, "epoch": epoch}
-            ).fetch("forktrack_results")[0]
+            (ForkTrackEvents & key).fetch1("forktrack_results")
         )
 
         valid_times = (
@@ -112,7 +113,10 @@ class GLMStorage(SpyglassMixin, dj.Computed):
             time=time_bins,
         )
 
-        path_progress_entry = (PathProgress() & {"epoch": epoch}).fetch_nwb()[0]
+        # `epoch` is secondary here too, so restricting on it alone matched
+        # every session with the same epoch number -- epoch 2 exists in nearly
+        # every recording -- and silently took whichever came back first.
+        path_progress_entry = (PathProgress & key).fetch_nwb()[0]
         path_progress_df = path_progress_entry["trial"]
 
         node_positions = (

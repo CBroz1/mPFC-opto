@@ -105,11 +105,11 @@ class PathProgress(SpyglassMixin, dj.Computed):
             .reset_index()
         )
 
+        # Restricted by `key`: `epoch` is a secondary attribute, so restricting
+        # on it ignores which ForkTrackParams and position source produced
+        # these events. PathProgressSelection declares `-> ForkTrackEvents`.
         forktrack_results = pd.DataFrame(
-            (
-                ForkTrackEvents()
-                & {"nwb_file_name": nwb_file_name, "epoch": selection["epoch"]}
-            ).fetch("forktrack_results")[0]
+            (ForkTrackEvents & key).fetch1("forktrack_results")
         )
 
         track_graph_name = selection["track_graph_name"]
