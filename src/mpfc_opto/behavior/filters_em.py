@@ -248,9 +248,11 @@ def FwdFilterEM(y, delta, x_init, sigma2_init, sigma2e, mu):
         # allv_logs[t] = -2*next_pred_error
         # print t, x_post[t], sigma2_post[t] , y[t-1]
 
-    ape = 0  # next_pred_error.mean()
+    # REVIEW: ape is the average prediction error, and it is always 0 -- the
+    # lines that would compute it are commented out above. No caller reads it,
+    # so nothing is wrong today, but the returned value means nothing.
+    ape = 0
 
-    # allv_logs.mean()
     return x_prior, x_post, sigma2_prior, sigma2_post, ape
 
 

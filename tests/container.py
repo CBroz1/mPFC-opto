@@ -97,7 +97,7 @@ class DockerMySQLManager:
                 dj.conn(reset=True)
                 self._say("server is accepting connections")
                 return
-            except Exception as e:  # noqa: BLE001 - any failure means not ready
+            except Exception as e:  # any failure means not ready yet
                 last = e
                 time.sleep(interval)
         raise TimeoutError(

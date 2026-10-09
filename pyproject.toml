@@ -49,10 +49,12 @@ dependencies = [
 ]
 
 optional-dependencies.test = [
-    "docker",    # spins up the MySQL server for database-backed tests
-    "jupytext",  # keeps notebooks and their paired scripts in sync
+    "docker",   # spins up the MySQL server for database-backed tests
+    "jupytext", # keeps notebooks and their paired scripts in sync
     "pytest",
     "pytest-cov",
+    # tomllib is stdlib only from 3.11, and this project supports 3.10.
+    "tomli; python_version < '3.11'",
 ]
 urls.Homepage = "https://github.com/denissemorales/mPFC-opto"
 urls.Repository = "https://github.com/denissemorales/mPFC-opto"
@@ -78,13 +80,11 @@ lint.extend-select = ["UP"]
 "notebooks/*.ipynb" = [
     "E402", # imports after code: how a notebook is written
     "F401", # imports kept for later cells, or for their display side effects
-    "F811", # a cell redefining a name from an earlier cell
-    # F821 is suppressed under protest: four notebooks reference names that are
-    # never defined, so those cells raise NameError if run top-to-bottom.
-    # Listed in .claude/TASKS.md -- fixing them needs the author's intent, not a
-    # lint pass.
-    "F821",
+    "F811", # a cell re-importing a module an earlier cell already imported
 ]
+# F821 is deliberately *not* ignored here. The notebooks do reference undefined
+# names, but each site carries a `# noqa: F821` and a `# REVIEW:` note, so the
+# cases stay greppable instead of vanishing behind a blanket rule.
 
 [tool.pytest.ini_options]
 addopts = "-q"

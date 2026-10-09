@@ -1,10 +1,14 @@
 """Check that the installed distribution agrees with `pyproject.toml`."""
 
-import tomllib
 from importlib.metadata import version
 from pathlib import Path
 
 import pytest
+
+try:  # stdlib from 3.11; this project supports 3.10, where it is not
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - depends on interpreter
+    import tomli as tomllib
 
 PYPROJECT = Path(__file__).resolve().parent.parent / "pyproject.toml"
 

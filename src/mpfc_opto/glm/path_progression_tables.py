@@ -353,6 +353,10 @@ def normalize_well(name):
     return name
 
 
+# REVIEW: this infers a trajectory from prev_well and well only. It also read
+# row["trial_type"] (Inbound/Outbound) and ignored it -- that dead assignment is
+# gone, but if trial type should affect the result, the logic is missing.
+# Mirrored in notebooks/pathprogression_notebook.ipynb.
 def infer_trajectory(row):
     prev_well = normalize_well(row["prev_well"])
     well = normalize_well(row["well_name"])

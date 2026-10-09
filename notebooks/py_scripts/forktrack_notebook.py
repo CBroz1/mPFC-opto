@@ -66,7 +66,11 @@ y = pd.DataFrame(x[0])
 y
 y
 
-x = (WTrackEvents() & {"epoch": 2}).fetch("wtrack_results")
+# REVIEW: pasted from the W-track notebook. This one is about the fork
+# track and imports ForkTrackEvents, so WTrackEvents is undefined here
+# and the cell raises NameError. Likely wants ForkTrackEvents /
+# "forktrack_results".
+x = (WTrackEvents() & {"epoch": 2}).fetch("wtrack_results")  # noqa: F821
 y = pd.DataFrame(x[0])
 y
 y

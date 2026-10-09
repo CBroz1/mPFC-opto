@@ -530,7 +530,9 @@ print(
 
 # --- Statistical test ---
 # stat, p_value = mannwhitneyu(amp_with_pulse_before, amp_without_pulse_before, alternative='two-sided')
-print(f"Mann-Whitney U test: stat={stat}, p={p_value:.4f}")
+# REVIEW: the mannwhitneyu call that produces stat and p_value is
+# commented out directly above, so this print raises NameError.
+print(f"Mann-Whitney U test: stat={stat}, p={p_value:.4f}")  # noqa: F821
 
 # --- Plot distributions ---
 plt.hist(
@@ -554,13 +556,15 @@ plt.title("Jacob 06/17 03_s2: Ripple Amplitude: Stim v No Stim")
 plt.show()
 # -
 
-no_stim_ids = dur_without_stim.reset_index()["id"]
+# REVIEW: `dur_without_stim` is never defined in this notebook.
+no_stim_ids = dur_without_stim.reset_index()["id"]  # noqa: F821
 plt.hist(no_stim_ids, density=True)
 plt.title("Distribution of No Stim SWR numbers")
 plt.ylabel("Density %")
 plt.xlabel("SWR Number")
 
-ids = dur_with_stim.reset_index()["id"]
+# REVIEW: `dur_with_stim` is never defined in this notebook.
+ids = dur_with_stim.reset_index()["id"]  # noqa: F821
 plt.hist(ids)
 plt.title("Distribution of Stim SWR numbers")
 plt.ylabel("Density %")

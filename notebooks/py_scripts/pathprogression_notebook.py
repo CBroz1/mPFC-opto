@@ -54,6 +54,10 @@ def normalize_well(name):
     return name
 
 
+# REVIEW: this infers a trajectory from prev_well and well only. It also
+# read row['trial_type'] (Inbound/Outbound) and ignored it -- that dead
+# assignment is gone, but if trial type should affect the result, the
+# logic is missing. Mirrored in glm/path_progression_tables.py.
 def infer_trajectory(row):
     prev_well = normalize_well(row["prev_well"])
     well = normalize_well(row["well_name"])
@@ -768,7 +772,9 @@ if sig_indices.size > 0:
 else:
     top_sig = np.array([], dtype=int)
 
-if insig_indices.size > 0:
+# REVIEW: insig_indices is assigned on a commented-out line above, so
+# this whole branch raises NameError. Re-enable that line or drop it.
+if insig_indices.size > 0:  # noqa: F821
     insig_peak_rates = np.array(
         [
             (
@@ -776,10 +782,10 @@ if insig_indices.size > 0:
                 if not np.all(np.isnan(all_rates[i]))
                 else -np.inf
             )
-            for i in insig_indices
+            for i in insig_indices  # noqa: F821
         ]
     )
-    top_insig = insig_indices[np.argsort(-insig_peak_rates)[:6]]
+    top_insig = insig_indices[np.argsort(-insig_peak_rates)[:6]]  # noqa: F821
 else:
     top_insig = np.array([], dtype=int)
 
@@ -1148,6 +1154,8 @@ for traj in trajectories:
 plt.show()
 
 # +
+# get_contiguous_segments, compute_tuning_curve, run_shuffle_test and
+# safe_row_normalize come from the cell above; run it first.
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -1167,254 +1175,6 @@ OUTPUT_DIR = "."
 # EDIT: If your path_df has discontinuous path traversals, this prevents interpolation
 # across large behavioral gaps. If None, it is inferred as 5 * median dt.
 MAX_TIME_GAP_S = None
-
-
-def get_contiguous_segments(
-    times: np.ndarray,
-    max_time_gap_s: float | None = None,
-) -> list[slice]:
-    """Find contiguous behavioral segments.
-
-    Parameters
-    ----------
-    times : np.ndarray
-        Time values with shape ``(n_time,)``.
-    max_time_gap_s : float | None, default=None
-        Maximum allowed gap between adjacent time samples. If None, use
-        ``5 * median(diff(times))``.
-
-    Returns
-    -------
-    segments : list[slice]
-        List of slices defining contiguous time segments.
-    """
-    times = np.asarray(times, dtype=float)
-
-    if times.size < 2:
-        return [slice(0, times.size)]
-
-    dt = np.diff(times)
-    if max_time_gap_s is None:
-        max_time_gap_s = 5.0 * float(np.nanmedian(dt))
-
-    break_points = np.flatnonzero(dt > max_time_gap_s) + 1
-    segment_starts = np.r_[0, break_points]
-    segment_stops = np.r_[break_points, times.size]
-
-    return [
-        slice(start, stop)
-        for start, stop in zip(segment_starts, segment_stops)
-        if stop - start >= 2
-    ]
-
-
-def compute_tuning_curve(
-    spike_times: np.ndarray,
-    path_times: np.ndarray,
-    path_values: np.ndarray,
-    bins: np.ndarray,
-    min_occupancy_s: float = MIN_OCCUPANCY_S,
-    smooth_sigma: float = SMOOTH_SIGMA,
-    max_time_gap_s: float | None = MAX_TIME_GAP_S,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Compute path-progression tuning curve for one neuron.
-
-    Parameters
-    ----------
-    spike_times : np.ndarray
-        Spike times for one neuron, with shape ``(n_spikes,)``.
-    path_times : np.ndarray
-        Behavioral timestamps, with shape ``(n_time,)``.
-    path_values : np.ndarray
-        Path-progression values aligned to ``path_times``, with shape
-        ``(n_time,)``.
-    bins : np.ndarray
-        Path-progression bin edges, with shape ``(n_bins + 1,)``.
-    min_occupancy_s : float, default=MIN_OCCUPANCY_S
-        Minimum occupancy in seconds required for a bin to be valid.
-    smooth_sigma : float, default=SMOOTH_SIGMA
-        Gaussian smoothing sigma in bin units.
-    max_time_gap_s : float | None, default=MAX_TIME_GAP_S
-        Maximum allowed gap between adjacent behavioral time samples.
-        This prevents interpolation across discontinuous path traversals.
-
-    Returns
-    -------
-    rate : np.ndarray
-        Firing rate in Hz, with shape ``(n_bins,)``.
-    occupancy : np.ndarray
-        Occupancy in seconds, with shape ``(n_bins,)``.
-    """
-    spike_times = np.asarray(spike_times, dtype=float)
-    path_times = np.asarray(path_times, dtype=float)
-    path_values = np.asarray(path_values, dtype=float)
-
-    n_bins = len(bins) - 1
-
-    finite_path_mask = np.isfinite(path_times) & np.isfinite(path_values)
-    path_times = path_times[finite_path_mask]
-    path_values = path_values[finite_path_mask]
-
-    sort_order = np.argsort(path_times)
-    path_times = path_times[sort_order]
-    path_values = path_values[sort_order]
-
-    occupancy = np.zeros(n_bins, dtype=float)
-    counts = np.zeros(n_bins, dtype=float)
-
-    segments = get_contiguous_segments(
-        times=path_times,
-        max_time_gap_s=max_time_gap_s,
-    )
-
-    for segment in segments:
-        segment_times = path_times[segment]
-        segment_values = path_values[segment]
-
-        if segment_times.size < 2:
-            continue
-
-        dt = float(np.nanmedian(np.diff(segment_times)))
-
-        bin_idx = np.clip(
-            np.digitize(segment_values, bins) - 1,
-            0,
-            n_bins - 1,
-        )
-        occupancy += np.bincount(bin_idx, minlength=n_bins) * dt
-
-        # EDIT: Only use spikes inside this actual behavioral segment.
-        in_segment = (spike_times >= segment_times[0]) & (
-            spike_times <= segment_times[-1]
-        )
-        segment_spike_times = spike_times[in_segment]
-
-        if segment_spike_times.size == 0:
-            continue
-
-        # EDIT: left/right NaN prevents endpoint clamping by np.interp.
-        spike_pos = np.interp(
-            segment_spike_times,
-            segment_times,
-            segment_values,
-            left=np.nan,
-            right=np.nan,
-        )
-
-        valid_spike_pos = (
-            np.isfinite(spike_pos)
-            & (spike_pos >= bins[0])
-            & (spike_pos <= bins[-1])
-        )
-        spike_pos = spike_pos[valid_spike_pos]
-
-        segment_counts, _ = np.histogram(spike_pos, bins=bins)
-        counts += segment_counts
-
-    rate = np.full(n_bins, np.nan)
-    valid = occupancy > min_occupancy_s
-    rate[valid] = counts[valid] / occupancy[valid]
-
-    if smooth_sigma > 0:
-        filled = np.where(valid, rate, 0.0)
-        smoothed = gaussian_filter1d(filled, sigma=smooth_sigma)
-
-        valid_smoothed = gaussian_filter1d(
-            valid.astype(float), sigma=smooth_sigma
-        )
-        with np.errstate(invalid="ignore", divide="ignore"):
-            smoothed = np.where(
-                valid_smoothed > 0.01,
-                smoothed / valid_smoothed,
-                np.nan,
-            )
-
-        rate = np.where(valid, smoothed, np.nan)
-
-    return rate, occupancy
-
-
-def run_shuffle_test(
-    spike_times: np.ndarray,
-    path_times: np.ndarray,
-    path_values: np.ndarray,
-    bins: np.ndarray,
-    n_shuffles: int = N_SHUFFLES,
-    max_time_gap_s: float | None = MAX_TIME_GAP_S,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Compute circular-shift shuffle null distribution.
-
-    Parameters
-    ----------
-    spike_times : np.ndarray
-        Spike times for one neuron, with shape ``(n_spikes,)``.
-    path_times : np.ndarray
-        Behavioral timestamps, with shape ``(n_time,)``.
-    path_values : np.ndarray
-        Path-progression values aligned to ``path_times``, with shape
-        ``(n_time,)``.
-    bins : np.ndarray
-        Path-progression bin edges, with shape ``(n_bins + 1,)``.
-    n_shuffles : int, default=N_SHUFFLES
-        Number of circular shuffles.
-    max_time_gap_s : float | None, default=MAX_TIME_GAP_S
-        Maximum allowed gap between adjacent behavioral samples.
-
-    Returns
-    -------
-    p95_per_bin : np.ndarray
-        Per-bin shuffle threshold, with shape ``(n_bins,)``.
-    mean_per_bin : np.ndarray
-        Per-bin shuffle mean, with shape ``(n_bins,)``.
-    """
-    path_times = np.asarray(path_times, dtype=float)
-    spike_times = np.asarray(spike_times, dtype=float)
-
-    t_start = float(path_times[0])
-    t_stop = float(path_times[-1])
-    total_duration = t_stop - t_start
-
-    shuffle_rates = np.full((n_shuffles, len(bins) - 1), np.nan)
-
-    for i_shuffle in range(n_shuffles):
-        # EDIT: Keep the original absolute time origin.
-        shift = np.random.uniform(20.0, total_duration - 20.0)
-        shuffled = ((spike_times - t_start + shift) % total_duration) + t_start
-
-        rate, _ = compute_tuning_curve(
-            spike_times=shuffled,
-            path_times=path_times,
-            path_values=path_values,
-            bins=bins,
-            max_time_gap_s=max_time_gap_s,
-        )
-        shuffle_rates[i_shuffle] = rate
-
-    return (
-        np.nanpercentile(shuffle_rates, 100 * (1 - ALPHA), axis=0),
-        np.nanmean(shuffle_rates, axis=0),
-    )
-
-
-def safe_row_normalize(rates: np.ndarray) -> np.ndarray:
-    """Normalize each row to its maximum finite value.
-
-    Parameters
-    ----------
-    rates : np.ndarray
-        Tuning curves with shape ``(n_neurons, n_bins)``.
-
-    Returns
-    -------
-    norm_rates : np.ndarray
-        Row-normalized tuning curves with shape ``(n_neurons, n_bins)``.
-    """
-    rates = np.asarray(rates, dtype=float)
-
-    row_max = np.nanmax(rates, axis=1, keepdims=True)
-    row_max = np.where(np.isfinite(row_max) & (row_max > 0), row_max, 1.0)
-
-    return rates / row_max
 
 
 # ── Compute tuning curves ────────────────────────────────────────────────────

@@ -123,9 +123,11 @@ def check_pump_after_pokes(first_pokes_df, pump_times_dict, max_delay=None):
 nwb_file_name = "Caius20260623_.nwb"  # "Embry20260604_.nwb"
 nwbf = pynwb.NWBHDF5IO(sgc.Nwbfile().get_abs_path(nwb_file_name), "r").read()
 
-nwbf_dios = nwb.fields["processing"]["behavior"]["behavioral_events"].fields[
-    "time_series"
-]
+# REVIEW: `nwb` is never defined in this notebook, so this cell raises
+# NameError. The NWB file object is presumably loaded under another name.
+nwbf_dios = nwb.fields["processing"]["behavior"][  # noqa: F821
+    "behavioral_events"
+].fields["time_series"]
 
 # +
 import pandas as pd
