@@ -205,15 +205,22 @@ class SleepScoring(SpyglassMixin, dj.Computed):
     trial_object_id: varchar(40)
     """
 
-    def make(self, key):
-        fetch_dict = self._fetch_data(key)
-        result = self._compute_states(key, fetch_dict)
-        self._store_results(key, result, fetch_dict["nwb_file_name"])
+    # Tri-part make: DataJoint runs the fetch and the computation outside the
+    # populate transaction and holds it open only for the insert. This table
+    # fits GaussianMixture or KMeans, which is not work to do with a
+    # transaction open.
+    #
+    # Each return is a tuple because DataJoint unpacks it into the next stage:
+    # make_fetch -> make_compute -> make_insert.
 
-    # ==================== Tri-part helpers ====================
+    def make_fetch(self, key):
+        """Fetch all upstream data needed for classification.
 
-    def _fetch_data(self, key):
-        """Fetch all upstream data needed for classification."""
+        Returns
+        -------
+        tuple
+            A single element, the dict consumed by `make_compute`.
+        """
         params = (SleepScoringParams & key).fetch1()
         sel = (SleepScoringSelection & key).fetch1()
         nwb_file_name = sel["nwb_file_name"]
@@ -282,19 +289,28 @@ class SleepScoring(SpyglassMixin, dj.Computed):
             ).fetch1("pss_timestamps", "pss_values")
             pss_data = np.interp(theta_timestamps, pss_timestamps, pss_values)
 
-        return {
-            "params": params,
-            "nwb_file_name": nwb_file_name,
-            "theta_power": theta_power,
-            "delta_power": delta_power,
-            "theta_timestamps": theta_timestamps,
-            "head_speed": head_speed,
-            "emg_power": emg_power,
-            "pss_data": pss_data,
-        }
+        return (
+            {
+                "params": params,
+                "nwb_file_name": nwb_file_name,
+                "theta_power": theta_power,
+                "delta_power": delta_power,
+                "theta_timestamps": theta_timestamps,
+                "head_speed": head_speed,
+                "emg_power": emg_power,
+                "pss_data": pss_data,
+            },
+        )
 
-    def _compute_states(self, key, fetch_dict):
-        """Run the full classification pipeline; no DB access here."""
+    def make_compute(self, key, fetch_dict):
+        """Run the full classification pipeline; no DB access here.
+
+        Returns
+        -------
+        tuple
+            `(result, nwb_file_name)`. The file name travels through here
+            because `make_insert` receives only what this returns.
+        """
         params = fetch_dict["params"]
         theta_timestamps = fetch_dict["theta_timestamps"]
 
@@ -377,7 +393,7 @@ class SleepScoring(SpyglassMixin, dj.Computed):
         rem_duration = float(np.sum([e - s for s, e in rem_intervals]))
         wake_duration = float(np.sum([e - s for s, e in wake_intervals]))
 
-        return {
+        result = {
             "states": states,
             "timestamps": theta_timestamps,
             "intervals": {
@@ -393,8 +409,9 @@ class SleepScoring(SpyglassMixin, dj.Computed):
             "wake_percentage": 100 * wake_duration / total_time,
             "params_name": key["sleep_scoring_params_name"],
         }
+        return result, fetch_dict["nwb_file_name"]
 
-    def _store_results(self, key, result, nwb_file_name):
+    def make_insert(self, key, result, nwb_file_name):
         """Write results to the NWB file and insert the DB row.
 
         Uses the context manager pattern so AnalysisNwbfile registration

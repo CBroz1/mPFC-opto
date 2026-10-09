@@ -110,15 +110,21 @@ class UpDownStates(SpyglassMixin, dj.Computed):
     trial_object_id: varchar(40)
     """
 
-    def make(self, key):
-        fetch_dict = self._fetch_data(key)
-        result = self._compute_states(key, fetch_dict)
-        self._store_results(key, result, fetch_dict["nwb_file_name"])
+    # Tri-part make, for the same reason as SleepScoring: the detection work
+    # belongs outside the populate transaction, which is then held open only
+    # for the insert.
 
-    # ==================== Tri-part helpers ====================
+    # Each return is a tuple because DataJoint unpacks it into the next stage:
+    # make_fetch -> make_compute -> make_insert.
 
-    def _fetch_data(self, key):
-        """Fetch all upstream data needed for up/down detection."""
+    def make_fetch(self, key):
+        """Fetch all upstream data needed for up/down detection.
+
+        Returns
+        -------
+        tuple
+            A single element, the dict consumed by `make_compute`.
+        """
         params = (UpDownStateParams & key).fetch1()
         sel = (UpDownStateSelection & key).fetch1()
         nwb_file_name = sel["nwb_file_name"]
@@ -149,17 +155,26 @@ class UpDownStates(SpyglassMixin, dj.Computed):
             axis=1
         )  # sum across units → population rate
 
-        return {
-            "params": params,
-            "nwb_file_name": nwb_file_name,
-            "so_signal": so_signal,
-            "so_timestamps": so_timestamps,
-            "mua_rate": mua_rate,
-            "nrem_intervals": nrem_intervals,
-        }
+        return (
+            {
+                "params": params,
+                "nwb_file_name": nwb_file_name,
+                "so_signal": so_signal,
+                "so_timestamps": so_timestamps,
+                "mua_rate": mua_rate,
+                "nrem_intervals": nrem_intervals,
+            },
+        )
 
-    def _compute_states(self, key, fetch_dict):
-        """Detect UP/DOWN states within NREM intervals; no DB access."""
+    def make_compute(self, key, fetch_dict):
+        """Detect UP/DOWN states within NREM intervals; no DB access.
+
+        Returns
+        -------
+        tuple
+            `(result, nwb_file_name)`. The file name travels through here
+            because `make_insert` receives only what this returns.
+        """
         params = fetch_dict["params"]
         so_signal = fetch_dict["so_signal"]
         so_timestamps = fetch_dict["so_timestamps"]
@@ -204,7 +219,7 @@ class UpDownStates(SpyglassMixin, dj.Computed):
         down_duration = float(np.sum([e - s for s, e in down_intervals]))
         up_duration = float(np.sum([e - s for s, e in up_intervals]))
 
-        return {
+        result = {
             "states": states,
             "timestamps": so_timestamps,
             "down_duration": down_duration,
@@ -228,8 +243,9 @@ class UpDownStates(SpyglassMixin, dj.Computed):
                 else 0.0
             ),
         }
+        return result, fetch_dict["nwb_file_name"]
 
-    def _store_results(self, key, result, nwb_file_name):
+    def make_insert(self, key, result, nwb_file_name):
         """Write results to NWB and insert DB row."""
         with AnalysisNwbfile().build(nwb_file_name) as builder:
             obj_id = builder.add_nwb_object(

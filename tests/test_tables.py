@@ -123,3 +123,36 @@ class TestMakeKeyPinsUpstream:
         for table in (ForkTrackEvents, PathProgress):
             assert "epoch" in table.heading.names
             assert "epoch" not in table.primary_key
+
+
+class TestTriPartMake:
+    """Computed tables doing heavy work use the tri-part make.
+
+    DataJoint runs `make` inside a transaction, so a table that fits a mixture
+    model there holds one open for the duration. The tri-part methods let the
+    fetch and the computation happen outside it.
+    """
+
+    @pytest.mark.parametrize(
+        "module,table",
+        [
+            ("mpfc_opto.sleep.sleep_table", "SleepScoring"),
+            ("mpfc_opto.sleep.updown_tables", "UpDownStates"),
+            ("mpfc_opto.glm.glm_tables", "GLMStorage"),
+            ("mpfc_opto.glm.path_progression_tables", "PathProgress"),
+            ("mpfc_opto.glm.basis", "GLMBasis"),
+            ("mpfc_opto.behavior.forktrack_tables", "ForkTrackEvents"),
+        ],
+    )
+    def test_defines_all_three_and_no_plain_make(self, server, module, table):
+        """DataJoint accepts `make` *or* the full trio; a half-converted table
+        would fall back to `make` and silently keep its transaction."""
+        import importlib
+
+        cls = getattr(importlib.import_module(module), table)
+        for method in ("make_fetch", "make_compute", "make_insert"):
+            assert callable(getattr(cls, method, None)), f"missing {method}"
+        assert "make" not in vars(cls), (
+            f"{table} defines both `make` and the tri-part methods; DataJoint "
+            "would use `make` and the split would have no effect"
+        )

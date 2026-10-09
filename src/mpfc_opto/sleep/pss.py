@@ -12,7 +12,7 @@ dependency.
 
 How to use in your sleep scoring pipeline:
 1) Populate SleepPSS for the same recording / LFP source you use for scoring.
-2) In SleepScoring._fetch_data(), fetch SleepPSS and interpolate onto your scoring timestamps.
+2) In SleepScoring.make_fetch(), fetch SleepPSS and interpolate onto your scoring timestamps.
 3) Include pss as a feature when params.use_pss is True.
 """
 
