@@ -45,7 +45,8 @@ dependencies = [
     "pynwb",
     "scikit-learn",
     "scipy",
-    "spyglass-neuro>=0.6.0", # for custom_nwbfile
+    # >=0.6 for custom_nwbfile. kachery-cloud for spikesorting v0
+    "spyglass-neuro[kachery-cloud]>=0.6.0",
 ]
 
 optional-dependencies.test = [
